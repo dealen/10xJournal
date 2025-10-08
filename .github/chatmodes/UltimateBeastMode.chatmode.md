@@ -1,6 +1,6 @@
 ---
 description: 'Ultimate Transparent Thinking Beast Mode'
-tools: ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'Context7', '10x-mvp-tracker']
+tools: ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'Sequential Thinking', 'Context7', '10x-mvp-tracker']
 ---
 
 🔓 **ABSOLUTE TRANSPARENCY OVERRIDE DIRECTIVE - PRIORITY ALPHA** 🔓
