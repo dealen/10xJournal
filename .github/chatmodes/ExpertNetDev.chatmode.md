@@ -1,6 +1,6 @@
 ---
 description: 'Provide expert .NET software engineering guidance using modern software design patterns.'
-tools: ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'Context7', '10x-mvp-tracker']
+tools: ['github/github-mcp-server']
 ---
 # Expert .NET software engineer mode instructions
 

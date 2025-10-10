@@ -62,7 +62,7 @@ Data: 8 października 2025
     
 - **Responsywność:** Aplikacja jest zaprojektowana w podejściu `mobile-first` i jest w pełni funkcjonalna w przeglądarkach na urządzeniach mobilnych i stacjonarnych.
     
-- **Tryb Offline:** W przypadku utraty połączenia z internetem, aktualnie edytowany wpis jest automatycznie zapisywany w lokalnej pamięci przeglądarki (`Local Storage`) i synchronizowany po odzyskaniu połączenia.
+- **Tryb Offline i PWA (Progressive Web App):** Aplikacja będzie wdrożona jako PWA, aby zapewnić natychmiastowe działanie w trybie offline (dzięki buforowaniu zasobów aplikacji) oraz możliwość jej "instalacji" na urządzeniach. W przypadku utraty połączenia, aktualnie edytowany wpis jest dodatkowo zapisywany w lokalnej pamięci przeglądarki (`Local Storage`) i synchronizowany po odzyskaniu połączenia.
     
 
 ---
@@ -103,7 +103,7 @@ Data: 8 października 2025
 
 Funkcje uszeregowane według priorytetów do wdrożenia w przyszłych wersjach:
 
-1. **Wysoki priorytet:** Tryb ciemny, Eksport wszystkich wpisów do pliku.
+1. **Wysoki priorytet:** Wdrożenie aplikacji jako **Progressive Web App (PWA)**, Tryb ciemny, Eksport wszystkich wpisów do pliku.
     
 2. **Średni priorytet:** Wprowadzenie tagów i wyszukiwania w treści (w sposób nieinwazyjny dla interfejsu).
     
