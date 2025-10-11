@@ -187,3 +187,14 @@ ARIA Roles: For custom interactive components (if any are built), use appropriat
 Keyboard Navigation: Ensure all interactive elements are reachable and operable via the keyboard.
 
 Contrast: Pico.css has good default contrast ratios, but double-check any custom colors.
+
+10. Documentation
+Code Comments: Use XML documentation comments for public APIs (classes, methods, etc.) to generate API documentation.
+
+README.md: Maintain a clear and concise README.md file at the root of the project to explain the project setup, usage, and development guidelines.
+
+In-line Documentation: Use comments judiciously within the code to explain complex logic or decisions.
+
+11. Summary
+
+Summarise each development stem by writing a short paragraph about what was done, why it was done, and how it aligns with the project's principles. This helps maintain clarity and focus throughout the development process. Place it in SUMMARY.md.

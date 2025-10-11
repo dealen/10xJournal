@@ -12,7 +12,8 @@ builder.Services.AddSingleton(provider =>
 {
     var configuration = provider.GetRequiredService<IConfiguration>();
     var supabaseUrl = configuration["Supabase:Url"] ?? throw new InvalidOperationException("Configuration value 'Supabase:Url' is missing.");
-    var supabaseKey = configuration["Supabase:AnonKey"];
+    var supabaseKey = configuration["Supabase:AnonKey"] ?? throw new InvalidOperationException("Configuration value 'Supabase:AnonKey' is missing.");
+
     return new Supabase.Client(supabaseUrl, supabaseKey);
 });
 
