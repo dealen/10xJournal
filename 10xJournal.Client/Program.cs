@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using _10xJournal.Client;
 using _10xJournal.Client.Features.Authentication.Models;
+using _10xJournal.Client.Features.Authentication.Register;
 using _10xJournal.Client.Features.Authentication.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 var devUserOptions = builder.Configuration.GetSection("DevUser").Get<DevUserOptions>() ?? new DevUserOptions();
 builder.Services.AddSingleton(Options.Create(devUserOptions));
 builder.Services.AddScoped<CurrentUserAccessor>();
+builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
 
 builder.Services.AddSingleton(provider =>
 {

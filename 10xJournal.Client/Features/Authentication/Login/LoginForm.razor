@@ -3,13 +3,18 @@
 @inject Supabase.Client SupabaseClient
 @inject ILogger<LoginForm> Logger
 
-<EditForm Model="loginModel" OnValidSubmit="HandleValidSubmit">
+<EditForm Model="loginModel" OnValidSubmit="HandleValidSubmit" aria-busy="@isBusy">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
     @if (!string.IsNullOrWhiteSpace(errorMessage))
     {
         <p role="alert">@errorMessage</p>
+    }
+
+    @if (isBusy)
+    {
+        <p aria-live="polite">Logowanie w toku...</p>
     }
 
     <label for="login-email">Adres e-mail</label>
@@ -20,7 +25,7 @@
     <InputText id="login-password" @bind-Value="loginModel.Password" type="password" autocomplete="current-password" required />
     <ValidationMessage For="() => loginModel.Password" />
 
-    <button type="submit" disabled="@isBusy">
+    <button type="submit" disabled="@isBusy" aria-disabled="@isBusy">
         @(isBusy ? "Logowanie..." : "Zaloguj się")
     </button>
 
