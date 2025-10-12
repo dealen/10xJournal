@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10xJournal - Mockup</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+    <style>
+        :root {
+            --spacing-company: 0.5rem;
+            --bottom-nav-height: 64px;
+            --top-nav-height: 60px;
+            --sidebar-width: 250px;
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        body {
+            padding: 0;
+            margin: 0;
+        }
+
+        .app-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header - Always visible */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--top-nav-height);
+            padding: 0 var(--spacing);
+            border-bottom: 1px solid var(--muted-border-color);
+            background-color: var(--background-color);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Hamburger Menu Button - Mobile only */
+        .hamburger-btn {
+            display: none;
+            background: transparent;
+            border: none;
+            padding: 0.5rem;
+            cursor: pointer;
+            margin: 0;
+            width: 40px;
+            height: 40px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background-color: var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -6px);
+        }
+
+        /* Side Drawer - Mobile only */
+        .side-drawer {
+            position: fixed;
+            top: var(--top-nav-height);
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: calc(100vh - var(--top-nav-height));
+            background-color: var(--background-color);
+            border-right: 1px solid var(--muted-border-color);
+            transition: left 0.3s ease;
+            z-index: 99;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .side-drawer.open {
+            left: 0;
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            top: var(--top-nav-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 98;
+            display: none;
+        }
+
+        .drawer-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-menu {
+            padding: 1rem;
+        }
+
+        .drawer-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: inherit;
+            margin-bottom: 0.5rem;
+        }
+
+        .drawer-menu-item:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .drawer-menu-item .icon {
+            font-size: 1.5rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .drawer-menu-item .label {
+            font-weight: 500;
+        }
+
+        .drawer-divider {
+            height: 1px;
+            background-color: var(--muted-border-color);
+            margin: 1rem 0;
+        }
+
+        /* Desktop Sidebar */
+        .desktop-sidebar {
+            display: none;
+            position: fixed;
+            top: var(--top-nav-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--top-nav-height));
+            background-color: var(--background-color);
+            border-right: 1px solid var(--muted-border-color);
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+
+        .sidebar-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .sidebar-menu-item:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .sidebar-menu-item.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .sidebar-menu-item .icon {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-menu-item .label {
+            font-weight: 500;
+        }
+
+        .sidebar-section {
+            margin-top: 1.5rem;
+            padding: 0 1.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--muted-color);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Bottom Navigation - Mobile only */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background-color: var(--background-color);
+            border-top: 1px solid var(--muted-border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 100;
+            padding: 0;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            flex: 1;
+            height: 100%;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: var(--muted-color);
+            padding: 0.5rem;
+        }
+
+        .bottom-nav-item:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+
+        .bottom-nav-item .icon {
+            font-size: 1.5rem;
+        }
+
+        .bottom-nav-item .label {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        /* Main Content Area */
+        main {
+            flex: 1;
+            margin-top: var(--top-nav-height);
+            padding: var(--spacing);
+            max-width: 1200px;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .streak-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--primary);
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--muted-border-color);
+            padding: 0.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            margin: 0;
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--primary-hover);
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .theme-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        [data-theme="dark"] .theme-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Content Screens */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Entries List */
+        .entries-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .entries-header h2 {
+            margin: 0;
+        }
+
+        .entries-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .entry-card {
+            padding: 1rem;
+            border: 1px solid var(--muted-border-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .entry-card:hover {
+            background-color: var(--card-background-color);
+        }
+
+        .entry-date {
+            font-size: 0.875rem;
+            color: var(--muted-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .entry-preview {
+            font-weight: 500;
+            margin: 0;
+        }
+
+        /* Editor */
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-textarea {
+            min-height: 400px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        /* Auth Forms */
+        .auth-form {
+            max-width: 400px;
+            margin: 2rem auto;
+        }
+
+        /* Settings */
+        .settings-section {
+            margin-bottom: 2rem;
+        }
+
+        .danger-zone {
+            border: 2px solid var(--del-color);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-top: 2rem;
+        }
+
+        /* FAB Button - Mobile only for new entry */
+        .fab {
+            position: fixed;
+            bottom: calc(var(--bottom-nav-height) + 1rem);
+            right: 1rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            cursor: pointer;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 767px) {
+            /* Mobile: Show bottom nav and hamburger */
+            .bottom-nav {
+                display: flex;
+            }
+            
+            .hamburger-btn {
+                display: flex;
+            }
+            
+            .side-drawer,
+            .drawer-overlay {
+                display: block;
+            }
+            
+            main {
+                margin-bottom: var(--bottom-nav-height);
+            }
+
+            .fab {
+                display: flex;
+            }
+
+            .streak-indicator {
+                display: none; /* Hide on mobile to save space */
+            }
+        }
+
+        @media (min-width: 768px) {
+            /* Desktop: Show sidebar, hide bottom nav and FAB */
+            .desktop-sidebar {
+                display: block;
+            }
+            
+            .bottom-nav,
+            .fab,
+            .hamburger-btn {
+                display: none;
+            }
+            
+            main {
+                margin-left: var(--sidebar-width);
+                margin-bottom: 0;
+            }
+
+            .editor-textarea {
+                min-height: 500px;
+            }
+        }
+
+        /* Dark mode adjustments */
+        [data-theme="dark"] {
+            --entry-card-hover: rgba(255, 255, 255, 0.05);
+        }
+
+        [data-theme="light"] {
+            --entry-card-hover: rgba(0, 0, 0, 0.02);
+        }
+
+        /* Smooth transitions */
+        html {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        header, footer, .entry-card, .bottom-nav, .desktop-sidebar, .side-drawer {
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Header -->
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="hamburger-btn" onclick="toggleDrawer()" aria-label="Menu">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h1>10xJournal</h1>
+                </div>
+                <div class="header-right">
+                    <div class="streak-indicator">
+                        <span>🔥</span>
+                        <span><strong>7</strong> dni</span>
+                    </div>
+                    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Przełącz motyw">
+                        <span class="theme-icon">🌙</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Mobile Side Drawer -->
+        <div class="drawer-overlay" onclick="toggleDrawer()"></div>
+        <nav class="side-drawer">
+            <div class="drawer-menu">
+                <a class="drawer-menu-item" onclick="showScreen('settings'); toggleDrawer();">
+                    <span class="icon">⚙️</span>
+                    <span class="label">Ustawienia</span>
+                </a>
+                <a class="drawer-menu-item" href="mailto:feedback@10xjournal.app">
+                    <span class="icon">💬</span>
+                    <span class="label">Prześlij opinię</span>
+                </a>
+                <a class="drawer-menu-item" onclick="showScreen('login'); toggleDrawer();">
+                    <span class="icon">ℹ️</span>
+                    <span class="label">O aplikacji</span>
+                </a>
+                <div class="drawer-divider"></div>
+                <a class="drawer-menu-item" onclick="if(confirm('Czy na pewno chcesz się wylogować?')) showScreen('login'); toggleDrawer();">
+                    <span class="icon">🚪</span>
+                    <span class="label">Wyloguj się</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Desktop Sidebar -->
+        <nav class="desktop-sidebar">
+            <a class="sidebar-menu-item active" onclick="showScreen('list')">
+                <span class="icon">📝</span>
+                <span class="label">Moje wpisy</span>
+            </a>
+            <a class="sidebar-menu-item" onclick="showScreen('editor')">
+                <span class="icon">✏️</span>
+                <span class="label">Nowy wpis</span>
+            </a>
+            
+            <div class="sidebar-section">Konto</div>
+            <a class="sidebar-menu-item" onclick="showScreen('settings')">
+                <span class="icon">⚙️</span>
+                <span class="label">Ustawienia</span>
+            </a>
+            <a class="sidebar-menu-item" href="mailto:feedback@10xjournal.app">
+                <span class="icon">💬</span>
+                <span class="label">Prześlij opinię</span>
+            </a>
+            <a class="sidebar-menu-item" onclick="showScreen('login')">
+                <span class="icon">ℹ️</span>
+                <span class="label">O aplikacji</span>
+            </a>
+            
+            <div class="sidebar-section" style="margin-top: 2rem;"></div>
+            <a class="sidebar-menu-item" onclick="if(confirm('Czy na pewno chcesz się wylogować?')) showScreen('login')">
+                <span class="icon">🚪</span>
+                <span class="label">Wyloguj się</span>
+            </a>
+        </nav>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Login Screen -->
+            <div id="login" class="screen">
+                <div class="auth-form">
+                    <h2>Zaloguj się</h2>
+                    <form>
+                        <label>
+                            Email
+                            <input type="email" placeholder="twoj@email.com" required>
+                        </label>
+                        <label>
+                            Hasło
+                            <input type="password" required>
+                        </label>
+                        <button type="submit" onclick="event.preventDefault(); showScreen('list')">Zaloguj</button>
+                        <p style="text-align: center;">
+                            <a href="#" onclick="showScreen('register'); return false;">Nie masz konta? Zarejestruj się</a><br>
+                            <small><a href="#">Zapomniałeś hasła?</a></small>
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Register Screen -->
+            <div id="register" class="screen">
+                <div class="auth-form">
+                    <h2>Załóż konto</h2>
+                    <form>
+                        <label>
+                            Email
+                            <input type="email" placeholder="twoj@email.com" required>
+                        </label>
+                        <label>
+                            Hasło
+                            <input type="password" required>
+                            <small>Min. 8 znaków</small>
+                        </label>
+                        <label>
+                            Potwierdź hasło
+                            <input type="password" required>
+                        </label>
+                        <button type="submit" onclick="event.preventDefault(); showScreen('list')">Zarejestruj się</button>
+                        <p style="text-align: center;">
+                            <a href="#" onclick="showScreen('login'); return false;">Masz już konto? Zaloguj się</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Entries List Screen -->
+            <div id="list" class="screen active">
+                <div class="entries-header">
+                    <h2>Twoje wpisy</h2>
+                </div>
+
+                <div class="entries-list">
+                    <div class="entry-card" onclick="showScreen('editor')">
+                        <div class="entry-date">12 października 2025, 14:30</div>
+                        <p class="entry-preview">Dzisiaj był naprawdę produktywny dzień...</p>
+                    </div>
+                    <div class="entry-card" onclick="showScreen('editor')">
+                        <div class="entry-date">11 października 2025, 22:15</div>
+                        <p class="entry-preview">Refleksje po przeczytaniu książki o mindfulness</p>
+                    </div>
+                    <div class="entry-card" onclick="showScreen('editor')">
+                        <div class="entry-date">10 października 2025, 08:00</div>
+                        <p class="entry-preview">Poranek zaczęty od kawy i planowania dnia</p>
+                    </div>
+                    <div class="entry-card" onclick="showScreen('editor')">
+                        <div class="entry-date">9 października 2025, 19:45</div>
+                        <p class="entry-preview">Spotkanie z przyjaciółmi przypomniało mi, jak ważne są...</p>
+                    </div>
+                </div>
+
+                <button class="fab" onclick="showScreen('editor')" aria-label="Nowy wpis">+</button>
+            </div>
+
+            <!-- Editor Screen -->
+            <div id="editor" class="screen">
+                <div class="editor-container">
+                    <div class="editor-header">
+                        <h2 style="margin: 0;">Edytor wpisu</h2>
+                        <small style="color: var(--muted-color);">Ostatnio zapisano: 14:32</small>
+                    </div>
+                    
+                    <textarea class="editor-textarea" placeholder="Zacznij pisać...">Dzisiaj był naprawdę produktywny dzień. Udało mi się ukończyć projekt, nad którym pracowałem przez ostatnie dwa tygodnie.
+
+Rano zacząłem od przejrzenia listy zadań i priorytetyzacji najważniejszych rzeczy. To naprawdę pomogło mi zachować focus przez cały dzień.
+
+Wieczorem poszedłem na spacer, żeby podsumować dzień. Czuję się zadowolony z postępów.</textarea>
+                    
+                    <div class="editor-actions">
+                        <button onclick="if(confirm('Czy na pewno chcesz usunąć ten wpis?')) { alert('Wpis usunięty'); showScreen('list'); }" class="secondary outline">Usuń wpis</button>
+                        <button onclick="alert('Wpis zapisany!'); showScreen('list')">Zapisz</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Screen -->
+            <div id="settings" class="screen">
+                <h2>Ustawienia</h2>
+                
+                <div class="settings-section">
+                    <h3>Bezpieczeństwo</h3>
+                    <form>
+                        <label>
+                            Obecne hasło
+                            <input type="password">
+                        </label>
+                        <label>
+                            Nowe hasło
+                            <input type="password">
+                        </label>
+                        <label>
+                            Potwierdź nowe hasło
+                            <input type="password">
+                        </label>
+                        <button type="submit" onclick="event.preventDefault(); alert('Hasło zmienione!')">Zmień hasło</button>
+                    </form>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Konto</h3>
+                    <button onclick="if(confirm('Czy na pewno chcesz się wylogować?')) showScreen('login')" class="secondary">Wyloguj się</button>
+                </div>
+
+                <div class="danger-zone">
+                    <h3 style="color: var(--del-color);">Strefa niebezpieczna</h3>
+                    <p>Usunięcie konta jest nieodwracalne. Wszystkie twoje wpisy zostaną trwale usunięte.</p>
+                    <button onclick="if(confirm('Czy chcesz najpierw wyeksportować swoje wpisy?')) alert('Eksport rozpoczęty'); else if(confirm('Czy na pewno chcesz usunąć konto?')) { alert('Konto usunięte'); showScreen('login'); }" class="secondary">Usuń konto</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation - Mobile Only -->
+        <nav class="bottom-nav">
+            <a class="bottom-nav-item active" onclick="showScreen('list')">
+                <span class="icon">📝</span>
+                <span class="label">Wpisy</span>
+            </a>
+            <a class="bottom-nav-item" onclick="showScreen('editor')">
+                <span class="icon">✏️</span>
+                <span class="label">Nowy wpis</span>
+            </a>
+            <a class="bottom-nav-item" onclick="showScreen('settings')">
+                <span class="icon">⚙️</span>
+                <span class="label">Ustawienia</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update active states
+            document.querySelectorAll('.bottom-nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.sidebar-menu-item').forEach(item => item.classList.remove('active'));
+            
+            // Close drawer if open
+            const drawer = document.querySelector('.side-drawer');
+            const overlay = document.querySelector('.drawer-overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+            if (drawer.classList.contains('open')) {
+                drawer.classList.remove('open');
+                overlay.classList.remove('open');
+                hamburger.classList.remove('active');
+            }
+        }
+        
+        function toggleDrawer() {
+            const drawer = document.querySelector('.side-drawer');
+            const overlay = document.querySelector('.drawer-overlay');
+            const hamburger = document.querySelector('.hamburger-btn');
+            
+            drawer.classList.toggle('open');
+            overlay.classList.toggle('open');
+            hamburger.classList.toggle('active');
+        }
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            const icon = document.querySelector('.theme-icon');
+            icon.textContent = newTheme === 'dark' ? '☀️' : '🌙';
+        }
+        
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            
+            const icon = document.querySelector('.theme-icon');
+            if (icon) {
+                icon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            }
+        }
+        
+        loadTheme();
+    </script>
+</body>
+</html>

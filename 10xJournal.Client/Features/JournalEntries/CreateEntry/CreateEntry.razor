@@ -3,9 +3,11 @@
 @page "/journal/create"
 @using _10xJournal.Client.Features.JournalEntries.Models
 @using _10xJournal.Client.Features.JournalEntries.CreateEntry
+@using _10xJournal.Client.Features.Authentication.Services
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
 @inject ILogger<CreateEntry> Logger
+@inject CurrentUserAccessor CurrentUserAccessor
 
 <PageTitle>Create New Entry</PageTitle>
 
@@ -53,59 +55,13 @@
 
         try
         {
-            // Ensure we set the UserId so row-level security (RLS) allows the insert
             if (SupabaseClient == null)
                 throw new InvalidOperationException("Supabase client is not available.");
 
-            Guid? currentUserId = null;
-
-            // Try common strongly-typed access first (in case API matches)
-            try
-            {
-                // These members may or may not exist depending on the Supabase .NET client version
-                var authProp = SupabaseClient.GetType().GetProperty("Auth");
-                if (authProp != null)
-                {
-                    var auth = authProp.GetValue(SupabaseClient);
-                    var currentUserProp = auth?.GetType().GetProperty("CurrentUser") ?? auth?.GetType().GetProperty("User");
-                    var idProp = currentUserProp?.PropertyType.GetProperty("Id");
-                    var idValue = currentUserProp != null ? currentUserProp.GetValue(auth) : null;
-                    if (idValue != null)
-                    {
-                        var idCandidate = idProp?.GetValue(idValue) ?? idValue.GetType().GetProperty("Id")?.GetValue(idValue);
-                        if (idCandidate is Guid g) currentUserId = g;
-                        else if (idCandidate is string s && Guid.TryParse(s, out var parsed)) currentUserId = parsed;
-                    }
-                }
-            }
-            catch
-            {
-                // swallow — we'll try reflection fallback below
-            }
-
-            // Reflection fallback: look for any property path that contains an 'Id' string guid
-            if (currentUserId == null)
-            {
-                foreach (var prop in SupabaseClient.GetType().GetProperties())
-                {
-                    try
-                    {
-                        var val = prop.GetValue(SupabaseClient);
-                        if (val == null) continue;
-
-                        var idProp = val.GetType().GetProperty("Id");
-                        if (idProp == null) continue;
-                        var idVal = idProp.GetValue(val);
-                        if (idVal is Guid gg) { currentUserId = gg; break; }
-                        if (idVal is string ss && Guid.TryParse(ss, out var p)) { currentUserId = p; break; }
-                    }
-                    catch { }
-                }
-            }
-
+            var currentUserId = await CurrentUserAccessor.GetCurrentUserIdAsync();
             if (currentUserId == null || currentUserId == Guid.Empty)
             {
-                throw new InvalidOperationException("Could not determine current user id from Supabase session. Are you logged in?");
+                throw new InvalidOperationException("Could not determine current user id. Ensure authentication is configured or enable the development override.");
             }
 
             var newEntry = new JournalEntry { Content = request.Content, UserId = currentUserId.Value };

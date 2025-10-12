@@ -114,46 +114,53 @@ Funkcje uszeregowane według priorytetów do wdrożenia w przyszłych wersjach:
 
 ---
 
+
 ### **7. Szczegółowe Historyjki Użytkownika (User Stories)**
+
+#### **Moduł: Strona Publiczna (dla Gości)**
+
+1.  **(Nowa)** **Jako odwiedzający stronę,** chcę na stronie głównej (`/`) zrozumieć, czym jest aplikacja i jakie problemy rozwiązuje, aby podjąć świadomą decyzję o założeniu konta.
+2.  **(Nowa)** **Jako odwiedzający stronę,** chcę łatwo znaleźć i przejść do strony logowania lub rejestracji, aby bez przeszkód rozpocząć korzystanie z aplikacji.
+3.  **(Nowa)** **Jako odwiedzający stronę,** chcę zobaczyć prosty i estetyczny interfejs strony głównej, aby mieć pozytywne pierwsze wrażenie o aplikacji.
 
 #### **Moduł: Zarządzanie Kontem**
 
-1. **Jako nowy użytkownik,** chcę móc zarejestrować się w aplikacji przy użyciu mojego adresu e-mail i hasła, aby stworzyć swoje prywatne konto.
+4. **Jako nowy użytkownik,** chcę móc zarejestrować się w aplikacji przy użyciu mojego adresu e-mail i hasła, aby stworzyć swoje prywatne konto.
     
-2. **Jako użytkownik próbujący się zarejestrować,** chcę zobaczyć zrozumiały komunikat o błędzie, jeśli mój e-mail jest już zajęty lub hasło jest zbyt słabe, aby móc poprawić dane.
+5. **Jako użytkownik próbujący się zarejestrować,** chcę zobaczyć zrozumiały komunikat o błędzie, jeśli mój e-mail jest już zajęty lub hasło jest zbyt słabe, aby móc poprawić dane.
     
-3. **Jako zarejestrowany użytkownik,** chcę móc zalogować się do aplikacji za pomocą mojego e-maila i hasła, aby uzyskać dostęp do mojego dziennika.
+6. **Jako zarejestrowany użytkownik,** chcę móc zalogować się do aplikacji za pomocą mojego e-maila i hasła, aby uzyskać dostęp do mojego dziennika.
     
-4. **Jako użytkownik próbujący się zalogować,** chcę zobaczyć komunikat o błędzie, jeśli podałem nieprawidłowe dane, abym wiedział, że muszę spróbować ponownie.
+7. **Jako użytkownik próbujący się zalogować,** chcę zobaczyć komunikat o błędzie, jeśli podałem nieprawidłowe dane, abym wiedział, że muszę spróbować ponownie.
     
-5. **Jako zalogowany użytkownik,** chcę mieć możliwość wylogowania się z aplikacji, aby zabezpieczyć dostęp do mojego konta na współdzielonym urządzeniu.
+8. **Jako zalogowany użytkownik,** chcę mieć możliwość wylogowania się z aplikacji, aby zabezpieczyć dostęp do mojego konta na współdzielonym urządzeniu.
     
-6. **Jako użytkownik, który zapomniał hasła,** chcę móc skorzystać z funkcji "resetuj hasło", aby odzyskać dostęp do mojego konta.
+9. **Jako użytkownik, który zapomniał hasła,** chcę móc skorzystać z funkcji "resetuj hasło", aby odzyskać dostęp do mojego konta.
     
-7. **Jako zalogowany użytkownik,** chcę mieć dostęp do strony "Ustawienia", gdzie mogę zmienić swoje hasło, aby dbać o bezpieczeństwo konta.
+10. **Jako zalogowany użytkownik,** chcę mieć dostęp do strony "Ustawienia", gdzie mogę zmienić swoje hasło, aby dbać o bezpieczeństwo konta.
     
 
 #### **Moduł: Zarządzanie Wpisami**
 
-8. **Jako nowy użytkownik,** po pierwszym zalogowaniu chcę zobaczyć wpis powitalny, aby zrozumieć, jak działa aplikacja i od czego zacząć.
+11. **Jako nowy użytkownik,** po pierwszym zalogowaniu chcę zobaczyć wpis powitalny, aby zrozumieć, jak działa aplikacja i od czego zacząć.
     
-9. **Jako zalogowany użytkownik,** chcę widzieć listę wszystkich moich wpisów w porządku od najnowszego do najstarszego, aby mieć szybki przegląd swojej historii.
+12. **Jako zalogowany użytkownik,** chcę widzieć listę wszystkich moich wpisów w porządku od najnowszego do najstarszego, aby mieć szybki przegląd swojej historii.
     
-10. **Jako zalogowany użytkownik,** chcę móc kliknąć przycisk "Nowy wpis", aby otworzyć pusty edytor i zacząć pisać.
+13. **Jako zalogowany użytkownik,** chcę móc kliknąć przycisk "Nowy wpis", aby otworzyć pusty edytor i zacząć pisać.
     
-11. **Jako użytkownik piszący nowy wpis,** chcę, aby po zapisaniu wpis pojawił się na górze listy, abym miał pewność, że został dodany.
+14. **Jako użytkownik piszący nowy wpis,** chcę, aby po zapisaniu wpis pojawił się na górze listy, abym miał pewność, że został dodany.
+  
+15. **Jako użytkownik przeglądający listę wpisów,** chcę móc kliknąć na dowolny wpis, aby otworzyć go do odczytu i edycji.
     
-12. **Jako użytkownik przeglądający listę wpisów,** chcę móc kliknąć na dowolny wpis, aby otworzyć go do odczytu i edycji.
+16. **Jako użytkownik edytujący istniejący wpis,** chcę, aby moje zmiany zostały zapisane, kiedy zakończę edycję.
     
-13. **Jako użytkownik edytujący istniejący wpis,** chcę, aby moje zmiany zostały zapisane, kiedy zakończę edycję.
-    
-14. **Jako użytkownik,** chcę móc usunąć wybrany wpis, ale najpierw chcę zobaczyć okno z prośbą o potwierdzenie, aby uniknąć przypadkowego skasowania danych.
+17. **Jako użytkownik,** chcę móc usunąć wybrany wpis, ale najpierw chcę zobaczyć okno z prośbą o potwierdzenie, aby uniknąć przypadkowego skasowania danych.
     
 
 #### **Moduł: Doświadczenie Użytkownika i Wymagania Niefunkcjonalne**
 
-15. **Jako użytkownik piszący długi tekst,** chcę, aby aplikacja zapisywała moją pracę w tle w razie utraty połączenia internetowego, abym nie stracił/a niezapisanych fragmentów.
+18. **Jako użytkownik piszący długi tekst,** chcę, aby aplikacja zapisywała moją pracę w tle w razie utraty połączenia internetowego, abym nie stracił/a niezapisanych fragmentów.
     
-16. **Jako użytkownik,** chcę, aby interfejs aplikacji był czytelny i funkcjonalny na moim telefonie komórkowym, abym mógł prowadzić dziennik z dowolnego miejsca.
+19. **Jako użytkownik,** chcę, aby interfejs aplikacji był czytelny i funkcjonalny na moim telefonie komórkowym, abym mógł prowadzić dziennik z dowolnego miejsca.
     
-17. **Jako świadomy użytkownik,** chcę mieć możliwość trwałego usunięcia mojego konta i wszystkich moich danych, a przed tym krokiem chcę otrzymać propozycję ich eksportu, aby zachować swoją historię.
+20. **Jako świadomy użytkownik,** chcę mieć możliwość trwałego usunięcia mojego konta i wszystkich moich danych, a przed tym krokiem chcę otrzymać propozycję ich eksportu, aby zachować swoją historię.
