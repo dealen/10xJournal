@@ -1,4 +1,5 @@
-using System.Text.Json.Serialization;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace _10xJournal.Client.Features.JournalEntries.Models;
 
@@ -6,35 +7,37 @@ namespace _10xJournal.Client.Features.JournalEntries.Models;
 /// Represents a journal entry from the database.
 /// Maps to the 'journal_entries' table in Supabase.
 /// </summary>
-public class JournalEntry
+[Table("journal_entries")]
+public class JournalEntry : BaseModel
 {
     /// <summary>
     /// Unique identifier for the journal entry.
     /// </summary>
-    [JsonPropertyName("id")]
+    [PrimaryKey("id", false)]
     public Guid Id { get; set; }
-
-    /// <summary>
-    /// The content/body of the journal entry.
-    /// </summary>
-    [JsonPropertyName("content")]
-    public string Content { get; set; } = string.Empty;
 
     /// <summary>
     /// The ID of the user who created this entry.
     /// </summary>
-    [JsonPropertyName("user_id")]
+    [Column("user_id")]
     public Guid UserId { get; set; }
+
+    /// <summary>
+    /// The content/body of the journal entry.
+    /// </summary>
+    [Column("content")]
+    public string Content { get; set; } = string.Empty;
 
     /// <summary>
     /// Timestamp when the entry was created.
     /// </summary>
-    [JsonPropertyName("created_at")]
+    [Column("created_at")]
     public DateTime CreatedAt { get; set; }
 
     /// <summary>
     /// Timestamp when the entry was last updated.
     /// </summary>
-    [JsonPropertyName("updated_at")]
+    [Column("updated_at")]
     public DateTime UpdatedAt { get; set; }
 }
+
