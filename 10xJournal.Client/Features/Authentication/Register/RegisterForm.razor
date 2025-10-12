@@ -1,6 +1,7 @@
 @using System
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
+@using _10xJournal.Client.Features.Authentication.Services
 @inject IAuthService AuthService
 @inject ILogger<RegisterForm> Logger
 
@@ -60,7 +61,7 @@
         catch (Supabase.Gotrue.Exceptions.GotrueException ex)
         {
             Logger.LogWarning(ex, "Registration failed for {Email}", model.Email);
-            apiErrorMessage = MapSupabaseError(ex);
+            apiErrorMessage = AuthErrorMapper.MapRegistrationError(ex);
         }
         catch (Exception ex)
         {
@@ -71,24 +72,5 @@
         {
             isSubmitting = false;
         }
-    }
-
-    private static string MapSupabaseError(Supabase.Gotrue.Exceptions.GotrueException exception)
-    {
-        var message = exception.Message ?? string.Empty;
-
-        if (message.Contains("User already registered", StringComparison.OrdinalIgnoreCase) ||
-            message.Contains("already exists", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Użytkownik o tym adresie e-mail już istnieje.";
-        }
-
-        if (message.Contains("Password", StringComparison.OrdinalIgnoreCase) &&
-            message.Contains("weak", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Podane hasło jest zbyt słabe.";
-        }
-
-        return "Nie udało się utworzyć konta. Sprawdź dane i spróbuj ponownie.";
     }
 }

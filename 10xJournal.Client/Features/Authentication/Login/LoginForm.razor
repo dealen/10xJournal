@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
+@using _10xJournal.Client.Features.Authentication.Services
 @inject Supabase.Client SupabaseClient
 @inject ILogger<LoginForm> Logger
 
@@ -62,7 +63,7 @@
         catch (Supabase.Gotrue.Exceptions.GotrueException ex)
         {
             Logger.LogWarning(ex, "Failed login attempt for {Email}", loginModel.Email);
-            errorMessage = "Nieprawidłowy e-mail lub hasło.";
+            errorMessage = AuthErrorMapper.MapLoginError(ex);
         }
         catch (Exception ex)
         {
