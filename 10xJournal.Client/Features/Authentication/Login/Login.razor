@@ -1,17 +1,23 @@
 @page "/login"
+@inject NavigationManager NavigationManager
 
-<PageTitle>Login - 10xJournal</PageTitle>
+<PageTitle>Logowanie - 10xJournal</PageTitle>
 
-<h1>Login</h1>
+<main>
+    <header>
+        <h1>Zaloguj się</h1>
+        <p>
+            Nie masz konta?
+            <a href="/register">Zarejestruj się</a>
+        </p>
+    </header>
 
-<form>
-    <label for="email">Email</label>
-    <input type="email" id="email" required />
+    <LoginForm OnLoginSuccess="HandleLoginSuccess" />
+</main>
 
-    <label for="password">Password</label>
-    <input type="password" id="password" required />
-
-    <button type="submit">Login</button>
-</form>
-
-<p>Don't have an account? <a href="/register">Register</a></p>
+@code {
+    private void HandleLoginSuccess()
+    {
+        NavigationManager.NavigateTo("/");
+    }
+}

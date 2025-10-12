@@ -1,0 +1,72 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@inject Supabase.Client SupabaseClient
+@inject ILogger<LoginForm> Logger
+
+<EditForm Model="loginModel" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <p role="alert">@errorMessage</p>
+    }
+
+    <label for="login-email">Adres e-mail</label>
+    <InputText id="login-email" @bind-Value="loginModel.Email" type="email" autocomplete="email" required />
+    <ValidationMessage For="() => loginModel.Email" />
+
+    <label for="login-password">Hasło</label>
+    <InputText id="login-password" @bind-Value="loginModel.Password" type="password" autocomplete="current-password" required />
+    <ValidationMessage For="() => loginModel.Password" />
+
+    <button type="submit" disabled="@isBusy">
+        @(isBusy ? "Logowanie..." : "Zaloguj się")
+    </button>
+
+    <a href="/reset-password">Nie pamiętam hasła</a>
+</EditForm>
+
+@code {
+    private readonly LoginModel loginModel = new();
+    private bool isBusy;
+    private string? errorMessage;
+
+    [Parameter]
+    public EventCallback OnLoginSuccess { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        if (isBusy)
+        {
+            return;
+        }
+
+        isBusy = true;
+        errorMessage = null;
+
+        try
+        {
+            await SupabaseClient.Auth.SignIn(loginModel.Email, loginModel.Password);
+
+            if (OnLoginSuccess.HasDelegate)
+            {
+                await OnLoginSuccess.InvokeAsync();
+            }
+        }
+        catch (Supabase.Gotrue.Exceptions.GotrueException ex)
+        {
+            Logger.LogWarning(ex, "Failed login attempt for {Email}", loginModel.Email);
+            errorMessage = "Nieprawidłowy e-mail lub hasło.";
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error during login");
+            errorMessage = "Wystąpił błąd połączenia. Spróbuj ponownie później.";
+        }
+        finally
+        {
+            isBusy = false;
+        }
+    }
+}
