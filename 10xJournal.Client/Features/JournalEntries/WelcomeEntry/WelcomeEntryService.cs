@@ -47,16 +47,16 @@ Możesz edytować lub usunąć ten wpis. Kliknij przycisk 'Nowy wpis', aby rozpo
 
             // Get current user ID
             var user = _supabaseClient.Auth.CurrentUser;
-            if (user == null || string.IsNullOrEmpty(user.Id))
+            if (user == null || string.IsNullOrEmpty(user.Id) || !Guid.TryParse(user.Id, out var userGuid))
             {
-                _logger.LogWarning("Cannot create welcome entry: user not authenticated");
+                _logger.LogWarning("Cannot create welcome entry: user not authenticated or user.Id is not a valid GUID");
                 return false;
             }
 
             // Create welcome entry
             var welcomeEntry = new JournalEntry
             {
-                UserId = Guid.Parse(user.Id),
+                UserId = userGuid,
                 Content = WELCOME_CONTENT,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
