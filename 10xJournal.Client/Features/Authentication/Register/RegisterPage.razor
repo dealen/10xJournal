@@ -1,0 +1,25 @@
+@page "/register"
+@using Microsoft.AspNetCore.Components.Web
+@using _10xJournal.Client.Features.Authentication.Register
+@inject NavigationManager Navigation
+
+<PageTitle>Rejestracja - 10xJournal</PageTitle>
+
+<main>
+    <header>
+        <h1>Załóż konto</h1>
+        <p>
+            Masz już konto?
+            <a href="/login">Zaloguj się</a>
+        </p>
+    </header>
+
+    <RegisterForm OnRegisterSuccess="HandleRegisterSuccess" />
+</main>
+
+@code {
+    private void HandleRegisterSuccess()
+    {
+        Navigation.NavigateTo("/registration-success");
+    }
+}

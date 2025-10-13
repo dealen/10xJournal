@@ -36,6 +36,16 @@ Rationale: Saved progress on a development branch for version control and collab
 Actions: Committed all changes with a concise message ("feat: Project cleanup and MVP foundation setup"); pushed to development branch and created a pull request for review.
 Outcome: Changes are staged for merge into main after review.
 Alignment: Maintained clear commit history; used descriptive naming and avoided unnecessary complexity.
+Step 8: Implemented Registration UI Slice
+Rationale: Delivered the `/register` onboarding experience to unblock new user sign-up and stay aligned with the vertical slice plan.
+Actions: Added `RegisterViewModel` with DataAnnotations validation, built `RegisterForm.razor` and `RegisterPage.razor`, introduced `IAuthService`/`SupabaseAuthService`, and wired up a confirmation screen plus DI registration.
+Outcome: Blazor registration flow now interacts directly with Supabase, handles error feedback, and forwards users to a confirmation view after a successful request.
+Alignment: Kept UI, state, and Supabase integration co-located within the Authentication slice, preserving simplicity and compliance with project architecture.
+Step 9: Manual QA Scenarios for Login Flow
+Rationale: Documented lightweight manual checks to guarantee the new login experience works end-to-end before automating tests.
+Actions: Defined three scenarios—successful login, rejected credentials, and user cancellation—to be exercised against the Supabase test instance after each change touching authentication.
+Outcome: Product and engineering share a repeatable smoke checklist, covering happy path and critical edge cases until integration tests arrive.
+Alignment: Upholds the pragmatic testing strategy (quick feedback with minimal overhead) and keeps focus on the core journaling loop.
 Current State and Next Steps
 Project Status: MVP foundation is complete—clean structure, PWA enabled, and Vertical Slice ready for feature implementation.
 Key Achievements: Aligned with all PRD requirements, tech stack, and architectural guidelines; prioritized integration tests and user-friendly error handling.

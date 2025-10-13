@@ -1,0 +1,76 @@
+@using System
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using _10xJournal.Client.Features.Authentication.Services
+@inject IAuthService AuthService
+@inject ILogger<RegisterForm> Logger
+
+<EditForm Model="model" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    @if (!string.IsNullOrWhiteSpace(apiErrorMessage))
+    {
+        <p role="alert">@apiErrorMessage</p>
+    }
+
+    <label for="register-email">Adres e-mail</label>
+    <InputText id="register-email" @bind-Value="model.Email" type="email" autocomplete="email" required />
+    <ValidationMessage For="() => model.Email" />
+
+    <label for="register-password">Hasło</label>
+    <InputText id="register-password" @bind-Value="model.Password" type="password" autocomplete="new-password" required />
+    <ValidationMessage For="() => model.Password" />
+
+    <label for="register-confirm-password">Powtórz hasło</label>
+    <InputText id="register-confirm-password" @bind-Value="model.ConfirmPassword" type="password" autocomplete="new-password" required />
+    <ValidationMessage For="() => model.ConfirmPassword" />
+
+    <button type="submit" disabled="@isSubmitting">
+        @(isSubmitting ? "Zakładanie konta..." : "Załóż konto")
+    </button>
+</EditForm>
+
+@code {
+    private readonly RegisterViewModel model = new();
+    private bool isSubmitting;
+    private string? apiErrorMessage;
+
+    [Parameter]
+    public EventCallback OnRegisterSuccess { get; set; }
+
+    private async Task HandleValidSubmit()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        isSubmitting = true;
+        apiErrorMessage = null;
+
+        try
+        {
+            await AuthService.RegisterAsync(model.Email.Trim(), model.Password);
+
+            if (OnRegisterSuccess.HasDelegate)
+            {
+                await OnRegisterSuccess.InvokeAsync();
+            }
+        }
+        catch (Supabase.Gotrue.Exceptions.GotrueException ex)
+        {
+            Logger.LogWarning(ex, "Registration failed for {Email}", model.Email);
+            apiErrorMessage = AuthErrorMapper.MapRegistrationError(ex);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error during registration for {Email}", model.Email);
+            apiErrorMessage = "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

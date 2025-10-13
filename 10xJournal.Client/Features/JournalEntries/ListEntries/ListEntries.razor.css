@@ -1,0 +1,52 @@
+/* Isolated CSS for ListEntries component */
+
+h1 {
+    margin-bottom: 1rem;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 2rem 0;
+}
+
+li {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--muted-border-color);
+    border-radius: var(--border-radius);
+    transition: background-color 0.2s ease;
+}
+
+li:hover {
+    background-color: var(--card-background-color);
+}
+
+li a {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+li strong {
+    font-size: 1.1rem;
+    color: var(--primary);
+}
+
+li small {
+    color: var(--muted-color);
+}
+
+/* Loading state */
+[aria-live="polite"] {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted-color);
+}
+
+/* Empty state */
+p:not([aria-live]) {
+    text-align: center;
+    padding: 2rem;
+    color: var(--muted-color);
+}

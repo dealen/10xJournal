@@ -83,6 +83,28 @@ To run the project on your local machine, follow these steps.
     ```
     The application should now be running on `http://localhost:5000` (or another port specified in the console).
 
+### Supabase Configuration Checklist
+
+To guarantee the Blazor client and Supabase stay in sync across environments, apply the following settings after creating your project:
+
+1.  **Auth → Sign In / Providers**
+    *   Enable **Allow new users to sign up**.
+    *   Disable **Allow anonymous sign-ins**.
+    *   Enable **Confirm email** so Supabase emails activation links automatically.
+    *   (Optional) Keep **Allow manual linking** off unless you plan multi-provider accounts.
+2.  **Auth → URL Configuration**
+    *   Set **Site URL** to your deployed frontend origin.
+    *   Add development (`https://localhost:5001`) and production URLs to **Redirect URLs** to support email confirmation and password resets.
+3.  **Auth → Email Templates**
+    *   Customize the confirmation/reset templates if you need localization; default English copy works for the MVP.
+4.  **Auth → Password Recovery**
+    *   Ensure password reset emails are enabled; future flows depend on this toggle.
+5.  **API Keys**
+    *   Use the `anon` public key in `appsettings.Development.json` under `Supabase:AnonKey`.
+    *   Never expose the `service_role` key in client code—store it only in secure server-side environments.
+
+Document any deviations from this checklist in `SUMMARY.md` so new contributors inherit the latest guidance.
+
 ---
 
 ## Available Scripts

@@ -119,9 +119,9 @@ Funkcje uszeregowane według priorytetów do wdrożenia w przyszłych wersjach:
 
 #### **Moduł: Strona Publiczna (dla Gości)**
 
-1.  **(Nowa)** **Jako odwiedzający stronę,** chcę na stronie głównej (`/`) zrozumieć, czym jest aplikacja i jakie problemy rozwiązuje, aby podjąć świadomą decyzję o założeniu konta.
-2.  **(Nowa)** **Jako odwiedzający stronę,** chcę łatwo znaleźć i przejść do strony logowania lub rejestracji, aby bez przeszkód rozpocząć korzystanie z aplikacji.
-3.  **(Nowa)** **Jako odwiedzający stronę,** chcę zobaczyć prosty i estetyczny interfejs strony głównej, aby mieć pozytywne pierwsze wrażenie o aplikacji.
+1.  **Jako odwiedzający stronę,** chcę na stronie głównej (`/`) zrozumieć, czym jest aplikacja i jakie problemy rozwiązuje, aby podjąć świadomą decyzję o założeniu konta.
+2.  **Jako odwiedzający stronę,** chcę łatwo znaleźć i przejść do strony logowania lub rejestracji, aby bez przeszkód rozpocząć korzystanie z aplikacji.
+3.  **Jako odwiedzający stronę,** chcę zobaczyć prosty i estetyczny interfejs strony głównej, aby mieć pozytywne pierwsze wrażenie o aplikacji.
 
 #### **Moduł: Zarządzanie Kontem**
 

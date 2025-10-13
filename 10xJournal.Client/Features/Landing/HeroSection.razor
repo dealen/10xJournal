@@ -1,0 +1,25 @@
+@inject NavigationManager Navigation
+
+<section>
+    <header>
+        <h1>Twoje myśli, prosto i bezpiecznie.</h1>
+        <p>Zapisuj codzienne refleksje bez rozproszeń i z pełnym spokojem o prywatność.</p>
+    </header>
+
+    <div role="group" aria-label="Działania użytkownika">
+        <button type="button" @onclick="NavigateToLogin">Zaloguj się</button>
+        <button type="button" @onclick="NavigateToRegister">Załóż konto</button>
+    </div>
+</section>
+
+@code {
+    private void NavigateToLogin()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private void NavigateToRegister()
+    {
+        Navigation.NavigateTo("/register");
+    }
+}
