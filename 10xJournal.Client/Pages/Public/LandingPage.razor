@@ -1,4 +1,5 @@
 @page "/"
+@inject NavigationManager NavigationManager
 
 <PageTitle>10xJournal — Strona główna</PageTitle>
 
@@ -9,3 +10,20 @@
 </main>
 
 <PublicFooter />
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Check if this is a password recovery redirect from Supabase
+        // Supabase returns tokens in the URL hash fragment (after #), not query string
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var fragment = uri.Fragment;
+        
+        // Check if there's a hash fragment with recovery type
+        if (!string.IsNullOrEmpty(fragment) && fragment.Contains("type=recovery"))
+        {
+            // Redirect to update-password page, preserving the hash fragment
+            NavigationManager.NavigateTo("/update-password" + fragment, forceLoad: false);
+        }
+    }
+}

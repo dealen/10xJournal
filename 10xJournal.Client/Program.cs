@@ -26,7 +26,19 @@ builder.Services.AddSingleton(provider =>
     var supabaseUrl = configuration["Supabase:Url"] ?? throw new InvalidOperationException("Configuration value 'Supabase:Url' is missing.");
     var supabaseKey = configuration["Supabase:AnonKey"] ?? throw new InvalidOperationException("Configuration value 'Supabase:AnonKey' is missing.");
 
-    return new Supabase.Client(supabaseUrl, supabaseKey);
+    var options = new Supabase.SupabaseOptions
+    {
+        AutoConnectRealtime = false,
+        AutoRefreshToken = true
+    };
+
+    return new Supabase.Client(supabaseUrl, supabaseKey, options);
 });
 
-await builder.Build().RunAsync();
+var app = builder.Build();
+
+// Initialize Supabase client to process any auth tokens in URL
+var supabaseClient = app.Services.GetRequiredService<Supabase.Client>();
+await supabaseClient.InitializeAsync();
+
+await app.RunAsync();
