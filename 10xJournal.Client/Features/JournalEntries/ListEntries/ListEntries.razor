@@ -1,16 +1,100 @@
 @page "/journal"
+@using _10xJournal.Client.Features.JournalEntries.Models
+@using _10xJournal.Client.Features.JournalEntries.WelcomeEntry
 @inject Supabase.Client SupabaseClient
+@inject WelcomeEntryService WelcomeEntryService
+@inject ILogger<ListEntries> Logger
 
-<PageTitle>10xJournal - Your Entries</PageTitle>
+<PageTitle>10xJournal - Twoje Wpisy</PageTitle>
 
-<h1>Your Journal Entries</h1>
+<h1>Twoje wpisy</h1>
 
-<p>Welcome to your journal. Here you can view and manage your entries.</p>
+@if (_isLoading)
+{
+    <p aria-live="polite">Ładowanie wpisów...</p>
+}
+else if (_entries == null || !_entries.Any())
+{
+    <p>Nie masz jeszcze żadnych wpisów. Kliknij "Nowy wpis", aby rozpocząć!</p>
+}
+else
+{
+    <ul>
+        @foreach (var entry in _entries)
+        {
+            <li>
+                <a href="/journal/entry/@entry.Id">
+                    <strong>@GetEntryTitle(entry)</strong>
+                    <br />
+                    <small>@entry.CreatedAt.ToString("d MMMM yyyy, HH:mm")</small>
+                </a>
+            </li>
+        }
+    </ul>
+}
 
-<!-- Placeholder for entry list -->
-<ul>
-    <li>Entry 1</li>
-    <li>Entry 2</li>
-</ul>
+<a href="/journal/new" role="button">Nowy wpis</a>
 
-<a href="/journal/new" role="button">Create New Entry</a>
+@code {
+    private List<JournalEntry>? _entries;
+    private bool _isLoading = true;
+    private bool _welcomeEntryCreated = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEntriesAsync();
+    }
+
+    private async Task LoadEntriesAsync()
+    {
+        try
+        {
+            _isLoading = true;
+
+            // Attempt to load entries
+            var response = await SupabaseClient
+                .From<JournalEntry>()
+                .Select("*")
+                .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
+                .Get();
+
+            _entries = response?.Models ?? new List<JournalEntry>();
+
+            // If no entries exist and welcome entry not yet created, create it
+            if (_entries.Count == 0 && !_welcomeEntryCreated)
+            {
+                _welcomeEntryCreated = await WelcomeEntryService.CreateWelcomeEntryIfNeededAsync();
+                
+                if (_welcomeEntryCreated)
+                {
+                    // Reload entries to show the welcome entry
+                    await LoadEntriesAsync();
+                    return; // Exit to prevent setting _isLoading to false twice
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading journal entries");
+            _entries = new List<JournalEntry>();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetEntryTitle(JournalEntry entry)
+    {
+        if (string.IsNullOrWhiteSpace(entry.Content))
+        {
+            return "(Pusty wpis)";
+        }
+
+        // Get first line or first 100 characters as title
+        var firstLine = entry.Content.Split('\n')[0];
+        return firstLine.Length > 100 
+            ? firstLine.Substring(0, 100) + "..." 
+            : firstLine;
+    }
+}

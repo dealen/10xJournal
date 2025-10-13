@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 namespace _10xJournal.Client.Features.Authentication.Register;
 
 /// <summary>
-/// Handles Supabase-backed authentication operations for the registration flow.
+/// Handles Supabase-backed authentication operations shared across authentication features.
 /// </summary>
 public sealed class SupabaseAuthService : IAuthService
 {

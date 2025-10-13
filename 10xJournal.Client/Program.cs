@@ -4,6 +4,8 @@ using _10xJournal.Client;
 using _10xJournal.Client.Features.Authentication.Models;
 using _10xJournal.Client.Features.Authentication.Register;
 using _10xJournal.Client.Features.Authentication.Services;
+using _10xJournal.Client.Features.Authentication.Logout;
+using _10xJournal.Client.Features.JournalEntries.WelcomeEntry;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
@@ -19,6 +21,8 @@ var devUserOptions = builder.Configuration.GetSection("DevUser").Get<DevUserOpti
 builder.Services.AddSingleton(Options.Create(devUserOptions));
 builder.Services.AddScoped<CurrentUserAccessor>();
 builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
+builder.Services.AddScoped<LogoutHandler>();
+builder.Services.AddScoped<WelcomeEntryService>();
 
 builder.Services.AddSingleton(provider =>
 {

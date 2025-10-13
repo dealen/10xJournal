@@ -1,8 +1,22 @@
-﻿<nav>
+﻿@using _10xJournal.Client.Features.Authentication.Logout
+@inject LogoutHandler LogoutHandler
+
+<nav>
     <ul>
-        <li><a href="/journal">Journal</a></li>
-        <li><a href="/journal/create">New entry</a></li>
-        <li><a href="/settings">Settings</a></li>
-        <li><a href="/login">Login</a></li>
+        <li><a href="/journal">Dziennik</a></li>
+        <li><a href="/journal/new">Nowy wpis</a></li>
+        <li><a href="/settings">Ustawienia</a></li>
+        <li>
+            <button @onclick="HandleLogoutAsync" type="button" class="secondary">
+                Wyloguj
+            </button>
+        </li>
     </ul>
 </nav>
+
+@code {
+    private async Task HandleLogoutAsync()
+    {
+        await LogoutHandler.LogoutAsync();
+    }
+}

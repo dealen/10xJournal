@@ -1,10 +1,37 @@
 @page "/settings"
+@using _10xJournal.Client.Features.Authentication.Logout
+@inject LogoutHandler LogoutHandler
+@inject NavigationManager NavigationManager
 
-<PageTitle>Settings - 10xJournal</PageTitle>
+<PageTitle>Ustawienia - 10xJournal</PageTitle>
 
-<h1>Settings</h1>
+<h1>Ustawienia</h1>
 
-<p>Change password or delete account.</p>
+<section>
+    <h2>Zmiana hasła</h2>
+    <p>Zaktualizuj hasło do swojego konta.</p>
+    <button @onclick="NavigateToChangePassword">Zmień hasło</button>
+</section>
 
-<button>Change Password</button>
-<button>Delete Account</button>
+<section>
+    <h2>Bezpieczeństwo konta</h2>
+    <button @onclick="HandleLogoutAsync" class="secondary">Wyloguj się</button>
+</section>
+
+<section>
+    <h2>Usuwanie konta</h2>
+    <p>Trwale usuń swoje konto i wszystkie dane.</p>
+    <button class="contrast" disabled>Usuń konto (wkrótce)</button>
+</section>
+
+@code {
+    private async Task HandleLogoutAsync()
+    {
+        await LogoutHandler.LogoutAsync();
+    }
+
+    private void NavigateToChangePassword()
+    {
+        NavigationManager.NavigateTo("/update-password");
+    }
+}
