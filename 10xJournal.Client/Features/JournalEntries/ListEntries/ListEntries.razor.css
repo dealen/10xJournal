@@ -1,52 +1,169 @@
-/* Isolated CSS for ListEntries component */
+/* ========================================
+   List Entries Component Styles
+   ======================================== */
 
-h1 {
-    margin-bottom: 1rem;
+/* Main Container */
+.journal-list-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1rem;
 }
 
-ul {
-    list-style: none;
-    padding: 0;
+/* Streak Indicator */
+.streak-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.streak-icon {
+    font-size: 1.5rem;
+    animation: flame-flicker 1.5s ease-in-out infinite;
+}
+
+.streak-text {
+    font-weight: 600;
+    color: white;
+    font-size: 1rem;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 16px rgba(255, 107, 53, 0.5);
+    }
+}
+
+@keyframes flame-flicker {
+    0%, 100% {
+        transform: scale(1) rotate(-2deg);
+    }
+    25% {
+        transform: scale(1.1) rotate(2deg);
+    }
+    50% {
+        transform: scale(1.05) rotate(-1deg);
+    }
+    75% {
+        transform: scale(1.08) rotate(1deg);
+    }
+}
+
+/* Header */
+.journal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+}
+
+.journal-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    color: var(--primary, #1a1a1a);
+}
+
+.btn-new-entry {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary, #007bff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.btn-new-entry:hover {
+    background-color: var(--primary-hover, #0056b3);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-new-entry:active {
+    transform: translateY(0);
+}
+
+/* Entries List */
+.entries-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Error Message */
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    background-color: #fee;
+    border: 1px solid #fcc;
+    border-radius: 8px;
     margin: 2rem 0;
 }
 
-li {
+.error-message p {
+    color: #c33;
     margin-bottom: 1rem;
-    padding: 1rem;
-    border: 1px solid var(--muted-border-color);
-    border-radius: var(--border-radius);
-    transition: background-color 0.2s ease;
+    font-size: 1rem;
 }
 
-li:hover {
-    background-color: var(--card-background-color);
+.btn-retry {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary, #007bff);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-li a {
-    display: block;
-    text-decoration: none;
-    color: inherit;
+.btn-retry:hover {
+    background-color: var(--primary-hover, #0056b3);
+    transform: translateY(-2px);
 }
 
-li strong {
-    font-size: 1.1rem;
-    color: var(--primary);
+/* Responsive Design */
+@media (max-width: 768px) {
+    .journal-list-container {
+        padding: 0.75rem;
+    }
+
+    .journal-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .journal-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .btn-new-entry {
+        width: 100%;
+        padding: 1rem;
+    }
+
+    .streak-indicator {
+        padding: 0.5rem 0.75rem;
+    }
+
+    .streak-text {
+        font-size: 0.9rem;
+    }
 }
 
-li small {
-    color: var(--muted-color);
-}
-
-/* Loading state */
-[aria-live="polite"] {
-    text-align: center;
-    padding: 2rem;
-    color: var(--muted-color);
-}
-
-/* Empty state */
-p:not([aria-live]) {
-    text-align: center;
-    padding: 2rem;
-    color: var(--muted-color);
+@media (max-width: 480px) {
+    .journal-header h1 {
+        font-size: 1.25rem;
+    }
 }

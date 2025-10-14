@@ -1,7 +1,7 @@
-# Plan implementacji punktu końcowego API: CreateJournalEntry
+# Plan implementacji endpointu API: CreateJournalEntry
 
-## 1. Przegląd punktu końcowego
-Celem tego punktu końcowego jest umożliwienie uwierzytelnionym użytkownikom tworzenia nowych wpisów w dzienniku. Punkt końcowy jest częścią REST API dostarczanego przez Supabase i jest wywoływany bezpośrednio z klienta Blazor WASM. Logika biznesowa, taka jak aktualizacja serii wpisów użytkownika (streaks), jest obsługiwana automatycznie przez wyzwalacze bazy danych PostgreSQL.
+## 1. Przegląd endpointu
+Celem tego endpointu jest umożliwienie uwierzytelnionym użytkownikom tworzenia nowych wpisów w dzienniku. Endpoint jest częścią REST API dostarczanego przez Supabase i jest wywoływany bezpośrednio z klienta Blazor WASM. Logika biznesowa, taka jak aktualizacja serii wpisów użytkownika (streaks), jest obsługiwana automatycznie przez wyzwalacze bazy danych PostgreSQL.
 
 ## 2. Szczegóły żądania
 - **Metoda HTTP**: `POST`

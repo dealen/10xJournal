@@ -1,0 +1,35 @@
+@inject NavigationManager NavigationManager
+
+<div class="empty-state">
+    <div class="empty-state-icon">📝</div>
+    <h2 class="empty-state-title">Brak wpisów</h2>
+    <p class="empty-state-message">
+        Nie masz jeszcze żadnych wpisów w dzienniku. 
+        Zacznij pisać już teraz i buduj nawyk refleksji!
+    </p>
+    <button class="btn-create-first" @onclick="HandleCreateClick" aria-label="Dodaj pierwszy wpis">
+        Dodaj pierwszy wpis
+    </button>
+</div>
+
+@code {
+    /// <summary>
+    /// Event callback fired when user clicks the create button.
+    /// If not provided, the component will navigate to /app/journal/new by default.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnCreateClick { get; set; }
+
+    private async Task HandleCreateClick()
+    {
+        if (OnCreateClick.HasDelegate)
+        {
+            await OnCreateClick.InvokeAsync();
+        }
+        else
+        {
+            // Fallback to direct navigation if no callback provided
+            NavigationManager.NavigateTo("/app/journal/new");
+        }
+    }
+}

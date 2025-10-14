@@ -1,0 +1,45 @@
+@using _10xJournal.Client.Features.JournalEntries.Models
+
+<article class="entry-item">
+    <a href="@($"/app/journal/{Entry.Id}")" class="entry-link">
+        <div class="entry-content">
+            <h2 class="entry-title">@GetDisplayTitle()</h2>
+            <time class="entry-date" datetime="@Entry.CreatedAt.ToString("yyyy-MM-dd")">
+                @Entry.CreatedAt.ToString("d MMMM yyyy")
+            </time>
+        </div>
+    </a>
+</article>
+
+@code {
+    /// <summary>
+    /// The journal entry to display.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public JournalEntry Entry { get; set; } = default!;
+
+    /// <summary>
+    /// Extracts the first line of the entry content as a display title.
+    /// If the content is empty, returns a default message.
+    /// If the first line exceeds 100 characters, truncates it with ellipsis.
+    /// </summary>
+    private string GetDisplayTitle()
+    {
+        if (string.IsNullOrWhiteSpace(Entry.Content))
+        {
+            return "Pusty wpis";
+        }
+
+        // Extract first line
+        var lines = Entry.Content.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var firstLine = lines.Length > 0 ? lines[0] : Entry.Content;
+
+        // Truncate if too long
+        if (firstLine.Length > 100)
+        {
+            return firstLine.Substring(0, 100) + "...";
+        }
+
+        return firstLine;
+    }
+}

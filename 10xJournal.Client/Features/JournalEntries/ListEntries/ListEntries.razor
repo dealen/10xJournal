@@ -1,82 +1,79 @@
-@page "/journal"
+@page "/app/journal"
 @using _10xJournal.Client.Features.JournalEntries.Models
-@using _10xJournal.Client.Features.JournalEntries.WelcomeEntry
-@inject Supabase.Client SupabaseClient
-@inject WelcomeEntryService WelcomeEntryService
-@inject ILogger<ListEntries> Logger
 
-<PageTitle>10xJournal - Twoje Wpisy</PageTitle>
+<PageTitle>10xJournal - Mój dziennik</PageTitle>
 
-<h1>Twoje wpisy</h1>
-
-@if (_isLoading)
-{
-    <p aria-live="polite">Ładowanie wpisów...</p>
-}
-else if (_entries == null || !_entries.Any())
-{
-    <p>Nie masz jeszcze żadnych wpisów. Kliknij "Nowy wpis", aby rozpocząć!</p>
-}
-else
-{
-    <ul>
-        @foreach (var entry in _entries)
-        {
-            <li>
-                <a href="/journal/entry/@entry.Id">
-                    <strong>@GetEntryTitle(entry)</strong>
-                    <br />
-                    <small>@entry.CreatedAt.ToString("d MMMM yyyy, HH:mm")</small>
-                </a>
-            </li>
-        }
-    </ul>
-}
-
-<a href="/journal/new" role="button">Nowy wpis</a>
-
-@code {
-    private List<JournalEntry>? _entries;
-    private bool _isLoading = true;
-    private bool _welcomeEntryCreated = false;
-
-    protected override async Task OnInitializedAsync()
+<main class="journal-list-container">
+    @if (_currentStreak > 0)
     {
-        await LoadEntriesAsync();
+        <div class="streak-indicator">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-text">@_currentStreak dni z rzędu</span>
+        </div>
     }
 
-    private async Task LoadEntriesAsync()
+    <header class="journal-header">
+        <h1>Mój dziennik</h1>
+        <button class="btn-new-entry" @onclick="NavigateToNewEntry" aria-label="Utwórz nowy wpis">
+            Nowy wpis
+        </button>
+    </header>
+
+    @if (_isLoading)
+    {
+        <SkeletonLoader />
+    }
+    else if (_hasError)
+    {
+        <div class="error-message" role="alert">
+            <p>@_errorMessage</p>
+            <button class="btn-retry" @onclick="RetryLoadAsync">
+                Spróbuj ponownie
+            </button>
+        </div>
+    }
+    else if (_entries.Count == 0)
+    {
+        <EmptyState OnCreateClick="NavigateToNewEntry" />
+    }
+    else
+    {
+        <section class="entries-list" aria-label="Lista wpisów dziennika">
+            @foreach (var entry in _entries)
+            {
+                <EntryListItem Entry="entry" @key="entry.Id" />
+            }
+        </section>
+    }
+</main>
+
+@code {
+    [Inject] private Supabase.Client SupabaseClient { get; set; } = default!;
+    [Inject] private NavigationManager NavigationManager { get; set; } = default!;
+
+    private List<JournalEntry> _entries = new();
+    private bool _isLoading = true;
+    private bool _hasError = false;
+    private string? _errorMessage;
+    private int _currentStreak = 0;
+
+    protected override async Task OnInitializedAsync()
     {
         try
         {
             _isLoading = true;
-
-            // Attempt to load entries
-            var response = await SupabaseClient
-                .From<JournalEntry>()
-                .Select("*")
-                .Order("created_at", Supabase.Postgrest.Constants.Ordering.Descending)
-                .Get();
-
-            _entries = response?.Models ?? new List<JournalEntry>();
-
-            // If no entries exist and welcome entry not yet created, create it
-            if (_entries.Count == 0 && !_welcomeEntryCreated)
-            {
-                _welcomeEntryCreated = await WelcomeEntryService.CreateWelcomeEntryIfNeededAsync();
-                
-                if (_welcomeEntryCreated)
-                {
-                    // Reload entries to show the welcome entry
-                    await LoadEntriesAsync();
-                    return; // Exit to prevent setting _isLoading to false twice
-                }
-            }
+            
+            // Load entries and streak data in parallel
+            var entriesTask = LoadEntriesAsync();
+            var streakTask = LoadStreakAsync();
+            
+            await Task.WhenAll(entriesTask, streakTask);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error loading journal entries");
-            _entries = new List<JournalEntry>();
+            _hasError = true;
+            _errorMessage = "Wystąpił nieoczekiwany błąd podczas ładowania danych.";
+            Console.Error.WriteLine($"Error in OnInitializedAsync: {ex.Message}");
         }
         finally
         {
@@ -84,17 +81,82 @@ else
         }
     }
 
-    private string GetEntryTitle(JournalEntry entry)
+    private async Task LoadEntriesAsync()
     {
-        if (string.IsNullOrWhiteSpace(entry.Content))
+        try
         {
-            return "(Pusty wpis)";
-        }
+            var response = await SupabaseClient
+                .From<JournalEntry>()
+                .Order(entry => entry.CreatedAt, Supabase.Postgrest.Constants.Ordering.Descending)
+                .Get();
 
-        // Get first line or first 100 characters as title
-        var firstLine = entry.Content.Split('\n')[0];
-        return firstLine.Length > 100 
-            ? firstLine.Substring(0, 100) + "..." 
-            : firstLine;
+            if (response?.Models != null)
+            {
+                _entries = response.Models;
+            }
+            else
+            {
+                _entries = new List<JournalEntry>();
+            }
+        }
+        catch (Exception ex) when (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
+        {
+            // Session expired - redirect to login
+            _hasError = true;
+            _errorMessage = "Twoja sesja wygasła. Zaloguj się ponownie.";
+            await Task.Delay(2000); // Give user time to read the message
+            NavigationManager.NavigateTo("/login", forceLoad: true);
+        }
+        catch (HttpRequestException)
+        {
+            _hasError = true;
+            _errorMessage = "Nie można połączyć się z serwerem. Sprawdź swoje połączenie internetowe.";
+        }
+        catch (Exception ex)
+        {
+            _hasError = true;
+            _errorMessage = "Wystąpił błąd podczas pobierania wpisów.";
+            Console.Error.WriteLine($"Error loading entries: {ex.Message}");
+        }
+    }
+
+    private async Task LoadStreakAsync()
+    {
+        try
+        {
+            var response = await SupabaseClient
+                .From<_10xJournal.Client.Features.JournalEntries.Models.UserStreak>()
+                .Get();
+
+            if (response?.Models != null && response.Models.Count > 0)
+            {
+                _currentStreak = response.Models[0].CurrentStreak;
+            }
+            else
+            {
+                _currentStreak = 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't block the main view
+            Console.Error.WriteLine($"Error loading streak data: {ex.Message}");
+            _currentStreak = 0;
+        }
+    }
+
+    private void NavigateToNewEntry()
+    {
+        NavigationManager.NavigateTo("/app/journal/new");
+    }
+
+    private async Task RetryLoadAsync()
+    {
+        _hasError = false;
+        _errorMessage = null;
+        _isLoading = true;
+        StateHasChanged();
+
+        await OnInitializedAsync();
     }
 }
