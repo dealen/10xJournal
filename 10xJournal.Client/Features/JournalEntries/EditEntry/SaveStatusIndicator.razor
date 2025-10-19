@@ -1,0 +1,53 @@
+@namespace _10xJournal.Client.Features.JournalEntries.EditEntry
+
+<div class="save-status-indicator" aria-live="polite" aria-atomic="true">
+    @switch (Status)
+    {
+        case SaveStatus.Idle:
+            <span class="status-idle"></span>
+            break;
+
+        case SaveStatus.Saving:
+            <span class="status-saving">
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Saving...</span>
+            </span>
+            break;
+
+        case SaveStatus.Saved:
+            <span class="status-saved">
+                <span aria-hidden="true">✓</span>
+                @if (LastSavedAt.HasValue)
+                {
+                    <span>Saved at @LastSavedAt.Value.ToString("HH:mm")</span>
+                }
+                else
+                {
+                    <span>Saved</span>
+                }
+            </span>
+            break;
+
+        case SaveStatus.Error:
+            <span class="status-error">
+                <span aria-hidden="true">⚠</span>
+                <span>Error saving</span>
+            </span>
+            break;
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// The current status of the save operation.
+    /// </summary>
+    [Parameter]
+    public SaveStatus Status { get; set; } = SaveStatus.Idle;
+
+    /// <summary>
+    /// The timestamp of the last successful save.
+    /// Used to display "Saved at HH:MM" when Status is Saved.
+    /// </summary>
+    [Parameter]
+    public DateTime? LastSavedAt { get; set; }
+}

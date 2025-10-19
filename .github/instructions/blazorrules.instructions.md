@@ -195,6 +195,11 @@ README.md: Maintain a clear and concise README.md file at the root of the projec
 
 In-line Documentation: Use comments judiciously within the code to explain complex logic or decisions.
 
-11. Summary
+13. Information about frameworks and libraries used
+Maintain a document (e.g., FRAMEWORKS.md) that lists all major frameworks and libraries used in the project, along with their versions and brief descriptions of their roles.
+Also add information about why they were chosen over alternatives.
+During implementation of new features, update this document if new libraries are added or existing ones are removed. Also include information about usage and new things learned about them.
+
+12. Summary
 
 Summarise each development stem by writing a short paragraph about what was done, why it was done, and how it aligns with the project's principles. This helps maintain clarity and focus throughout the development process. Place it in SUMMARY.md.

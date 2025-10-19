@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.JSInterop;
 using _10xJournal.Client;
 using _10xJournal.Client.Features.Authentication.Models;
 using _10xJournal.Client.Features.Authentication.Register;
@@ -24,9 +25,11 @@ builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<LogoutHandler>();
 builder.Services.AddScoped<WelcomeEntryService>();
 
-builder.Services.AddSingleton(provider =>
+builder.Services.AddScoped(provider =>
 {
     var configuration = provider.GetRequiredService<IConfiguration>();
+    var jsRuntime = provider.GetRequiredService<IJSRuntime>();
+    
     var supabaseUrl = configuration["Supabase:Url"] ?? throw new InvalidOperationException("Configuration value 'Supabase:Url' is missing.");
     var supabaseKey = configuration["Supabase:AnonKey"] ?? throw new InvalidOperationException("Configuration value 'Supabase:AnonKey' is missing.");
 
@@ -36,13 +39,30 @@ builder.Services.AddSingleton(provider =>
         AutoRefreshToken = true
     };
 
-    return new Supabase.Client(supabaseUrl, supabaseKey, options);
+    var client = new Supabase.Client(supabaseUrl, supabaseKey, options);
+    
+    // Set up session persistence using browser localStorage
+    var sessionPersistence = new BlazorSessionPersistence(jsRuntime);
+    client.Auth.SetPersistence(sessionPersistence);
+    
+    return client;
 });
 
 var app = builder.Build();
 
-// Initialize Supabase client to process any auth tokens in URL
+// Initialize Supabase client and restore session
 var supabaseClient = app.Services.GetRequiredService<Supabase.Client>();
+var jsRuntime = app.Services.GetRequiredService<IJSRuntime>();
+
+// Load persisted session from localStorage
+var sessionPersistence = new BlazorSessionPersistence(jsRuntime);
+var session = await sessionPersistence.LoadSessionAsync();
+if (session != null && !string.IsNullOrEmpty(session.AccessToken) && !string.IsNullOrEmpty(session.RefreshToken))
+{
+    await supabaseClient.Auth.SetSession(session.AccessToken, session.RefreshToken);
+}
+
+// Initialize Supabase client to process any auth tokens in URL
 await supabaseClient.InitializeAsync();
 
 await app.RunAsync();
