@@ -220,16 +220,11 @@
                     return;
                 }
 
-                var request = new Models.CreateJournalEntryRequest
-                {
-                    Content = _content
-                };
-
                 var response = await SupabaseClient
                     .From<JournalEntry>()
                     .Insert(new JournalEntry 
                     { 
-                        Content = request.Content,
+                        Content = _content,
                         UserId = currentUserId.Value
                     });
 
@@ -254,16 +249,10 @@
             else
             {
                 // Update existing entry
-                var request = new Models.UpdateJournalEntryRequest
-                {
-                    Content = _content,
-                    Id = _entryId
-                };
-
                 await SupabaseClient
                     .From<JournalEntry>()
                     .Where(x => x.Id == _entryId.Value)
-                    .Set(x => x.Content, request.Content)
+                    .Set(x => x.Content, _content)
                     .Update();
 
                 _lastSavedAt = DateTime.Now;

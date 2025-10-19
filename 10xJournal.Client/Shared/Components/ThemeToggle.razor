@@ -43,8 +43,7 @@
                 // Check system preference
                 try
                 {
-                    var prefersDark = await JSRuntime.InvokeAsync<bool>("eval", 
-                        "window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches");
+                    var prefersDark = await JSRuntime.InvokeAsync<bool>("appTheme.getSystemPreference");
                     _isDarkMode = prefersDark;
                 }
                 catch
@@ -75,7 +74,7 @@
         try
         {
             var theme = _isDarkMode ? "dark" : "light";
-            await JSRuntime.InvokeVoidAsync("eval", $"document.documentElement.setAttribute('data-theme', '{theme}')");
+            await JSRuntime.InvokeVoidAsync("appTheme.setTheme", theme);
         }
         catch
         {

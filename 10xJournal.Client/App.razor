@@ -1,4 +1,8 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@inject Supabase.Client SupabaseClient
+@inject IJSRuntime JSRuntime
+@inject ILogger<App> Logger
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
@@ -10,3 +14,36 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    private bool _sessionRestored = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_sessionRestored)
+        {
+            try
+            {
+                // Set up session persistence using browser localStorage
+                var sessionPersistence = new _10xJournal.Client.Features.Authentication.Services.BlazorSessionPersistence(JSRuntime);
+                SupabaseClient.Auth.SetPersistence(sessionPersistence);
+                
+                // Restore persisted session from localStorage
+                var session = await sessionPersistence.LoadSessionAsync();
+                
+                if (session != null && !string.IsNullOrEmpty(session.AccessToken) && !string.IsNullOrEmpty(session.RefreshToken))
+                {
+                    await SupabaseClient.Auth.SetSession(session.AccessToken, session.RefreshToken);
+                    Logger.LogInformation("Session restored from localStorage");
+                }
+                
+                _sessionRestored = true;
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to restore session from localStorage");
+            }
+        }
+    }
+}
