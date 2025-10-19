@@ -1,4 +1,5 @@
-using System.Text.Json.Serialization;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace _10xJournal.Client.Features.Authentication.Models;
 
@@ -6,24 +7,27 @@ namespace _10xJournal.Client.Features.Authentication.Models;
 /// Represents a user profile from the database.
 /// Maps to the 'profiles' table in Supabase.
 /// </summary>
-public class UserProfile
+[Table("profiles")]
+public class UserProfile : BaseModel
 {
     /// <summary>
     /// Unique identifier for the user profile.
     /// This matches the user's auth.users.id from Supabase Auth.
     /// </summary>
-    [JsonPropertyName("id")]
+    [PrimaryKey("id", false)]
     public Guid Id { get; set; }
 
     /// <summary>
     /// Timestamp when the profile was created.
+    /// Database handles this value automatically via DEFAULT now(), so we ignore it on insert.
     /// </summary>
-    [JsonPropertyName("created_at")]
-    public DateTime CreatedAt { get; set; }
+    [Column("created_at", ignoreOnInsert: true)]
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
     /// Timestamp when the profile was last updated.
+    /// Database handles this value automatically via DEFAULT now(), so we ignore it on insert and update.
     /// </summary>
-    [JsonPropertyName("updated_at")]
-    public DateTime UpdatedAt { get; set; }
+    [Column("updated_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset UpdatedAt { get; set; }
 }

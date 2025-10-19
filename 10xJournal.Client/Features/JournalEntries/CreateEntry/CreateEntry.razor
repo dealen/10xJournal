@@ -11,18 +11,32 @@
 
 <PageTitle>Create New Entry</PageTitle>
 
-<h1>Create New Journal Entry</h1>
+<div class="create-entry-container">
+    <h1>Create New Journal Entry</h1>
 
-<EditForm Model="@request" OnValidSubmit="HandleValidSubmitAsync">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+    <EditForm Model="@request" OnValidSubmit="HandleValidSubmitAsync">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <div class="mb-3">
-        <label for="content" class="form-label">Your thoughts for today:</label>
-        <InputTextArea id="content" @bind-Value="request.Content" class="form-control" rows="10" />
-    </div>
+        <div class="entry-form-group">
+            <label for="content" class="form-label">Your thoughts for today:</label>
+            
+            <div class="character-counter">
+                <span class="character-count">@GetCharacterCount() characters</span>
+                @if (GetWordCount() > 0)
+                {
+                    <span class="word-count">@GetWordCount() words</span>
+                }
+            </div>
+            
+            <InputTextArea id="content" 
+                          @bind-Value="request.Content" 
+                          class="form-control entry-textarea" 
+                          rows="10" 
+                          placeholder="Start writing your journal entry..." />
+        </div>
 
-    <button type="submit" class="btn btn-primary" disabled="@isLoading">
+        <button type="submit" class="btn btn-primary" disabled="@isLoading">
         @if (isLoading)
         {
             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
@@ -41,6 +55,7 @@
         </div>
     }
 </EditForm>
+</div>
 
 @code {
     private CreateJournalEntryRequest request = new CreateJournalEntryRequest();
@@ -71,7 +86,7 @@
             if (createdEntry != null)
             {
                 Logger.LogInformation("Successfully created journal entry with ID: {EntryId}", createdEntry.Id);
-                NavigationManager.NavigateTo("/journal/entries");
+                NavigationManager.NavigateTo("/app/journal");
             }
             else
             {
@@ -87,5 +102,20 @@
         {
             isLoading = false;
         }
+    }
+
+    private int GetCharacterCount()
+    {
+        return string.IsNullOrEmpty(request.Content) ? 0 : request.Content.Length;
+    }
+
+    private int GetWordCount()
+    {
+        if (string.IsNullOrWhiteSpace(request.Content))
+            return 0;
+
+        return request.Content
+            .Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+            .Length;
     }
 }

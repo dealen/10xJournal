@@ -1,0 +1,257 @@
+/* ========================================
+   Entry Editor Component Styles
+   Mobile-First Responsive Design
+   ======================================== */
+
+/* Main Container */
+.entry-editor {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+    overflow: hidden;
+}
+
+/* Loading & Error States */
+.loading-container,
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-container {
+    color: var(--pico-del-color, #dc3545);
+}
+
+.error-container button {
+    margin-top: 1rem;
+}
+
+/* Editor Header */
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--pico-background-color, #fff);
+    border-bottom: 1px solid var(--pico-muted-border-color, #e0e0e0);
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
+/* Character Counter */
+.character-counter {
+    display: flex !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0.5rem 1rem;
+    background: var(--pico-background-color, #fff);
+    border-bottom: 1px solid var(--pico-muted-border-color, #e0e0e0);
+    flex-shrink: 0;
+    font-size: 0.8rem;
+}
+
+.character-count,
+.word-count {
+    display: inline-flex !important;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    background: #f0f4f8;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    visibility: visible !important;
+    white-space: nowrap;
+}
+
+.character-count {
+    color: #0366d6;
+    font-weight: 600;
+}
+
+.word-count {
+    color: #6a737d;
+}
+
+/* Buttons */
+.back-button,
+.delete-button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    background: transparent;
+    border: 1px solid var(--pico-muted-border-color, #e0e0e0);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    color: var(--pico-color, #000); /* Explicit color for visibility */
+}
+
+.back-button:hover,
+.delete-button:hover {
+    background: var(--pico-secondary-hover, #f8f9fa);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.back-button:active,
+.delete-button:active {
+    transform: translateY(0);
+}
+
+.delete-button {
+    border-color: var(--pico-del-color, #dc3545);
+    color: var(--pico-del-color, #dc3545);
+}
+
+.delete-button:hover {
+    background: var(--pico-del-color, #dc3545);
+    color: white;
+}
+
+/* Main Editor Area */
+.editor-main {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Textarea */
+.entry-textarea {
+    width: 100%;
+    height: 100%;
+    padding: 1.5rem;
+    border: none;
+    resize: none;
+    font-size: 1rem;
+    line-height: 1.6;
+    font-family: var(--pico-font-family, inherit);
+    background: var(--pico-background-color, #fff);
+    color: var(--pico-color, #000);
+    outline: none;
+}
+
+.entry-textarea::placeholder {
+    color: var(--pico-muted-color, #6c757d);
+    opacity: 0.6;
+}
+
+.entry-textarea:focus {
+    outline: none;
+}
+
+/* Responsive Adjustments */
+@media (min-width: 768px) {
+    .editor-header {
+        padding: 1rem 1.5rem;
+    }
+
+    .character-counter {
+        padding: 0.625rem 1.5rem;
+        font-size: 0.875rem;
+    }
+
+    .character-count,
+    .word-count {
+        padding: 0.375rem 1rem;
+        font-size: 0.875rem;
+    }
+
+    .entry-textarea {
+        padding: 2rem;
+        font-size: 1.125rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .back-button,
+    .delete-button {
+        padding: 0.625rem 1.25rem;
+        font-size: 1rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .entry-textarea {
+        padding: 3rem;
+        max-width: 900px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .editor-header {
+        display: none;
+    }
+
+    .entry-textarea {
+        border: none;
+        padding: 0;
+    }
+
+    .character-counter {
+        display: none !important;
+    }
+}
+
+/* ========================================
+   Dark Mode Support
+   ======================================== */
+
+[data-theme="dark"] .editor-header {
+    background: var(--pico-background-color, #1a1a1a);
+    border-bottom-color: var(--pico-muted-border-color, #333);
+}
+
+[data-theme="dark"] .character-counter {
+    background: var(--pico-background-color, #1a1a1a);
+    border-bottom-color: var(--pico-muted-border-color, #333);
+}
+
+[data-theme="dark"] .character-count,
+[data-theme="dark"] .word-count {
+    background: #2a2a2a !important;
+    border-color: #444 !important;
+}
+
+[data-theme="dark"] .character-count {
+    color: #4a9eff !important;
+}
+
+[data-theme="dark"] .word-count {
+    color: #8b949e !important;
+}
+
+[data-theme="dark"] .back-button,
+[data-theme="dark"] .delete-button {
+    color: var(--pico-color, #e0e0e0);
+    border-color: var(--pico-muted-border-color, #444);
+}
+
+[data-theme="dark"] .back-button:hover,
+[data-theme="dark"] .delete-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .delete-button {
+    color: #ff6b6b;
+    border-color: #ff6b6b;
+}
+
+[data-theme="dark"] .delete-button:hover {
+    background: #ff6b6b;
+    color: white;
+}

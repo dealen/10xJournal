@@ -1,6 +1,48 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@implements IDisposable
 
-<main>
-    <NavMenu />
-    @Body
-</main>
+@if (_isAuthenticatedRoute)
+{
+    <div class="authenticated-layout">
+        <NavMenu />
+        <main class="main-content">
+            @Body
+        </main>
+    </div>
+}
+else
+{
+    <main class="public-layout">
+        @Body
+    </main>
+}
+
+@code {
+    private bool _isAuthenticatedRoute = false;
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += OnLocationChanged;
+        UpdateLayoutType();
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        UpdateLayoutType();
+        StateHasChanged();
+    }
+
+    private void UpdateLayoutType()
+    {
+        var path = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).AbsolutePath;
+        
+        // Authenticated routes start with /app or /settings
+        _isAuthenticatedRoute = path.StartsWith("/app") || path.StartsWith("/settings");
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

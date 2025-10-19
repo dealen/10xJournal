@@ -1,0 +1,380 @@
+@page "/app/journal/new"
+@page "/app/journal/{id:guid}"
+@namespace _10xJournal.Client.Features.JournalEntries.EditEntry
+@using _10xJournal.Client.Features.JournalEntries.Models
+@using _10xJournal.Client.Features.Authentication.Services
+@inject Supabase.Client SupabaseClient
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+@inject CurrentUserAccessor CurrentUserAccessor
+@implements IDisposable
+
+<div class="entry-editor">
+    @if (_isLoading)
+    {
+        <div class="loading-container">
+            <p>Loading entry...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(_loadErrorMessage))
+    {
+        <div class="error-container" role="alert">
+            <p>@_loadErrorMessage</p>
+            <button @onclick="NavigateToList">Back to Entries</button>
+        </div>
+    }
+    else
+    {
+        <header class="editor-header">
+            <button class="back-button" @onclick="NavigateToList" aria-label="Back to entries">
+                <span aria-hidden="true">←</span>
+                <span>Back</span>
+            </button>
+
+            <SaveStatusIndicator Status="_saveStatus" LastSavedAt="_lastSavedAt" />
+
+            @if (_entryId.HasValue)
+            {
+                <button class="delete-button" @onclick="HandleDeleteAsync" aria-label="Delete entry">
+                    <span aria-hidden="true">🗑</span>
+                    <span>Delete</span>
+                </button>
+            }
+        </header>
+
+        <div class="character-counter">
+            <span class="character-count">@GetCharacterCount() characters</span>
+            @if (GetWordCount() > 0)
+            {
+                <span class="word-count">@GetWordCount() words</span>
+            }
+        </div>
+
+        <main class="editor-main">
+            <textarea 
+                @ref="_textareaRef"
+                @oninput="HandleInput"
+                class="entry-textarea"
+                placeholder="Start writing your journal entry..."
+                aria-label="Journal entry content"
+                rows="20">@_content</textarea>
+        </main>
+    }
+</div>
+
+@code {
+    // Route parameter - Guid of entry to edit (null for new entry)
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    // State fields
+    private string _content = string.Empty;
+    private Guid? _entryId = null;
+    private SaveStatus _saveStatus = SaveStatus.Idle;
+    private DateTime? _lastSavedAt = null;
+    private bool _isLoading = false;
+    private string? _loadErrorMessage = null; // For blocking load/delete errors only
+    private ElementReference _textareaRef;
+    private Timer? _autoSaveTimer = null;
+    private bool _firstRender = true;
+
+    // Constants
+    private const int AUTOSAVE_DELAY_MS = 1000;
+    private const string LOCALSTORAGE_KEY_PREFIX = "unsaved_entry_";
+
+    /// <summary>
+    /// Initializes the component. Loads existing entry if in edit mode,
+    /// or starts with blank content if in create mode.
+    /// </summary>
+    protected override async Task OnInitializedAsync()
+    {
+        await ResetComponentStateAsync();
+    }
+
+    /// <summary>
+    /// Handles parameter changes when navigating between entries.
+    /// Resets component state when the Id parameter changes.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        await ResetComponentStateAsync();
+    }
+
+    /// <summary>
+    /// Sets focus on the textarea after first render in create mode.
+    /// </summary>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _firstRender && !Id.HasValue)
+        {
+            _firstRender = false;
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('.entry-textarea')?.focus()");
+            }
+            catch
+            {
+                // Focus failed, not critical
+            }
+        }
+    }
+
+    /// <summary>
+    /// Loads an existing journal entry from the API.
+    /// </summary>
+    private async Task LoadEntryAsync(Guid entryId)
+    {
+        var response = await SupabaseClient
+            .From<JournalEntry>()
+            .Where(x => x.Id == entryId)
+            .Single();
+
+        if (response == null)
+        {
+            _loadErrorMessage = "Entry not found.";
+            return;
+        }
+
+        _content = response.Content;
+        _entryId = response.Id;
+    }
+
+    /// <summary>
+    /// Resets component state based on the current Id parameter.
+    /// In edit mode (Id has value), loads the existing entry.
+    /// In create mode (Id is null), clears all state for a new entry.
+    /// </summary>
+    private async Task ResetComponentStateAsync()
+    {
+        _isLoading = true;
+        _loadErrorMessage = null;
+
+        try
+        {
+            if (Id.HasValue && Id.Value != Guid.Empty)
+            {
+                // Edit mode - load existing entry
+                await LoadEntryAsync(Id.Value);
+            }
+            else
+            {
+                // Create mode - reset all state for new entry
+                _content = string.Empty;
+                _entryId = null;
+                _saveStatus = SaveStatus.Idle;
+                _lastSavedAt = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            _loadErrorMessage = $"Failed to load entry: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    /// <summary>
+    /// Handles input events from the textarea. Triggers debounced auto-save.
+    /// </summary>
+    private void HandleInput(ChangeEventArgs e)
+    {
+        _content = e.Value?.ToString() ?? string.Empty;
+
+        // Cancel previous timer
+        _autoSaveTimer?.Dispose();
+
+        // Set new timer for debounced save
+        _autoSaveTimer = new Timer(async _ => await AutoSaveAsync(), null, AUTOSAVE_DELAY_MS, Timeout.Infinite);
+
+        // Save to LocalStorage immediately for draft recovery
+        _ = SaveToLocalStorageAsync();
+    }
+
+    /// <summary>
+    /// Performs auto-save operation after debounce delay.
+    /// Creates new entry if _entryId is null, otherwise updates existing entry.
+    /// </summary>
+    private async Task AutoSaveAsync()
+    {
+        // Don't save empty content
+        if (string.IsNullOrWhiteSpace(_content))
+        {
+            return;
+        }
+
+        _saveStatus = SaveStatus.Saving;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            if (_entryId == null)
+            {
+                // Create new entry - get current user ID first
+                var currentUserId = await CurrentUserAccessor.GetCurrentUserIdAsync();
+                if (currentUserId == null || currentUserId == Guid.Empty)
+                {
+                    _saveStatus = SaveStatus.Error;
+                    // Save errors are communicated via SaveStatusIndicator, not by hiding the editor
+                    await InvokeAsync(StateHasChanged);
+                    return;
+                }
+
+                var response = await SupabaseClient
+                    .From<JournalEntry>()
+                    .Insert(new JournalEntry 
+                    { 
+                        Content = _content,
+                        UserId = currentUserId.Value
+                    });
+
+                var createdEntry = response.Models.FirstOrDefault();
+                if (createdEntry != null)
+                {
+                    _entryId = createdEntry.Id;
+                    _lastSavedAt = DateTime.Now;
+                    _saveStatus = SaveStatus.Saved;
+
+                    // Clear LocalStorage after successful save
+                    await ClearLocalStorageAsync();
+
+                    // Update URL to edit mode without navigation
+                    NavigationManager.NavigateTo($"/app/journal/{_entryId}", false);
+                }
+                else
+                {
+                    _saveStatus = SaveStatus.Error;
+                }
+            }
+            else
+            {
+                // Update existing entry
+                await SupabaseClient
+                    .From<JournalEntry>()
+                    .Where(x => x.Id == _entryId.Value)
+                    .Set(x => x.Content, _content)
+                    .Update();
+
+                _lastSavedAt = DateTime.Now;
+                _saveStatus = SaveStatus.Saved;
+            }
+        }
+        catch (Exception)
+        {
+            _saveStatus = SaveStatus.Error;
+            // Save errors are communicated via SaveStatusIndicator, not by hiding the editor
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    /// <summary>
+    /// Saves current content to LocalStorage for draft recovery.
+    /// </summary>
+    private async Task SaveToLocalStorageAsync()
+    {
+        try
+        {
+            var key = _entryId.HasValue 
+                ? $"{LOCALSTORAGE_KEY_PREFIX}{_entryId.Value}" 
+                : $"{LOCALSTORAGE_KEY_PREFIX}new";
+            
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", key, _content);
+        }
+        catch
+        {
+            // LocalStorage save failed, not critical
+        }
+    }
+
+    /// <summary>
+    /// Clears the draft from LocalStorage after successful save.
+    /// </summary>
+    private async Task ClearLocalStorageAsync()
+    {
+        try
+        {
+            var key = _entryId.HasValue 
+                ? $"{LOCALSTORAGE_KEY_PREFIX}{_entryId.Value}" 
+                : $"{LOCALSTORAGE_KEY_PREFIX}new";
+            
+            await JSRuntime.InvokeVoidAsync("localStorage.removeItem", key);
+        }
+        catch
+        {
+            // LocalStorage clear failed, not critical
+        }
+    }
+
+    /// <summary>
+    /// Handles the delete button click. Shows confirmation and deletes the entry.
+    /// </summary>
+    private async Task HandleDeleteAsync()
+    {
+        if (!_entryId.HasValue)
+        {
+            return;
+        }
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to delete this entry? This action cannot be undone.");
+        
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            await SupabaseClient
+                .From<JournalEntry>()
+                .Where(x => x.Id == _entryId.Value)
+                .Delete();
+
+            await ClearLocalStorageAsync();
+            NavigateToList();
+        }
+        catch (Exception ex)
+        {
+            // Delete error should be blocking since the entry might be in an inconsistent state
+            _loadErrorMessage = $"Failed to delete entry: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Navigates back to the entries list.
+    /// </summary>
+    private void NavigateToList()
+    {
+        NavigationManager.NavigateTo("/app/journal");
+    }
+
+    /// <summary>
+    /// Gets the current character count of the entry content.
+    /// </summary>
+    private int GetCharacterCount()
+    {
+        return string.IsNullOrEmpty(_content) ? 0 : _content.Length;
+    }
+
+    /// <summary>
+    /// Gets the current word count of the entry content.
+    /// </summary>
+    private int GetWordCount()
+    {
+        if (string.IsNullOrWhiteSpace(_content))
+            return 0;
+
+        return _content
+            .Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+            .Length;
+    }
+
+    /// <summary>
+    /// Disposes the auto-save timer.
+    /// </summary>
+    public void Dispose()
+    {
+        _autoSaveTimer?.Dispose();
+    }
+}

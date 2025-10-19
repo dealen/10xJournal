@@ -5,7 +5,7 @@
         <div class="entry-content">
             <h2 class="entry-title">@GetDisplayTitle()</h2>
             <time class="entry-date" datetime="@Entry.CreatedAt.ToString("yyyy-MM-dd")">
-                @Entry.CreatedAt.ToString("d MMMM yyyy")
+                @Entry.CreatedAt.LocalDateTime.ToString("d MMMM yyyy", new System.Globalization.CultureInfo("pl-PL"))
             </time>
         </div>
     </a>

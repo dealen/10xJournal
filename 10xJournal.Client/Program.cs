@@ -24,9 +24,10 @@ builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<LogoutHandler>();
 builder.Services.AddScoped<WelcomeEntryService>();
 
-builder.Services.AddSingleton(provider =>
+builder.Services.AddScoped(provider =>
 {
     var configuration = provider.GetRequiredService<IConfiguration>();
+    
     var supabaseUrl = configuration["Supabase:Url"] ?? throw new InvalidOperationException("Configuration value 'Supabase:Url' is missing.");
     var supabaseKey = configuration["Supabase:AnonKey"] ?? throw new InvalidOperationException("Configuration value 'Supabase:AnonKey' is missing.");
 
