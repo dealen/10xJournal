@@ -1,0 +1,99 @@
+@inject IJSRuntime JSRuntime
+
+<button class="theme-toggle" @onclick="ToggleTheme" aria-label="Toggle theme" title="@(_isDarkMode ? "Switch to light mode" : "Switch to dark mode")">
+    <span class="theme-icon @(_isDarkMode ? "dark" : "light")">
+        @if (_isDarkMode)
+        {
+            <span class="moon">🌙</span>
+        }
+        else
+        {
+            <span class="sun">☀️</span>
+        }
+    </span>
+</button>
+
+@code {
+    private bool _isDarkMode = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadThemePreferenceAsync();
+        }
+    }
+
+    private async Task LoadThemePreferenceAsync()
+    {
+        try
+        {
+            var savedTheme = await JSRuntime.InvokeAsync<string?>("localStorage.getItem", "theme");
+            
+            if (savedTheme == "dark")
+            {
+                _isDarkMode = true;
+            }
+            else if (savedTheme == "light")
+            {
+                _isDarkMode = false;
+            }
+            else
+            {
+                // Check system preference
+                try
+                {
+                    var prefersDark = await JSRuntime.InvokeAsync<bool>("eval", 
+                        "window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches");
+                    _isDarkMode = prefersDark;
+                }
+                catch
+                {
+                    _isDarkMode = false;
+                }
+            }
+
+            await ApplyThemeAsync();
+            StateHasChanged();
+        }
+        catch
+        {
+            // Failed to load theme, use default (light)
+            _isDarkMode = false;
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+        await ApplyThemeAsync();
+        await SaveThemePreferenceAsync();
+    }
+
+    private async Task ApplyThemeAsync()
+    {
+        try
+        {
+            var theme = _isDarkMode ? "dark" : "light";
+            await JSRuntime.InvokeVoidAsync("eval", $"document.documentElement.setAttribute('data-theme', '{theme}')");
+        }
+        catch
+        {
+            // Failed to apply theme
+        }
+    }
+
+    private async Task SaveThemePreferenceAsync()
+    {
+        try
+        {
+            var theme = _isDarkMode ? "dark" : "light";
+            await JSRuntime.InvokeVoidAsync("localStorage.setItem", "theme", theme);
+        }
+        catch
+        {
+            // Failed to save preference
+        }
+    }
+}
+

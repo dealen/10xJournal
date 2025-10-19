@@ -1,22 +1,120 @@
 ﻿@using _10xJournal.Client.Features.Authentication.Logout
 @inject LogoutHandler LogoutHandler
+@inject NavigationManager NavigationManager
 
-<nav>
-    <ul>
-        <li><a href="/app/journal">Dziennik</a></li>
-        <li><a href="/app/journal/new">Nowy wpis</a></li>
-        <li><a href="/settings">Ustawienia</a></li>
-        <li>
-            <button @onclick="HandleLogoutAsync" type="button" class="secondary">
-                Wyloguj
-            </button>
-        </li>
-    </ul>
-</nav>
+<div class="nav-wrapper">
+    <!-- Theme Toggle Button -->
+    <ThemeToggle />
+
+    <!-- Mobile: Hamburger Button -->
+    <button class="hamburger-button" @onclick="ToggleMenu" aria-label="Toggle menu">
+        <span class="hamburger-icon">☰</span>
+    </button>
+
+    <!-- Hamburger Menu Overlay (Mobile & Desktop) -->
+    <div class="menu-overlay @(_isMenuOpen ? "open" : "")" @onclick="CloseMenu"></div>
+    
+    <!-- Hamburger Menu (Slide-in from left) -->
+    <nav class="hamburger-menu @(_isMenuOpen ? "open" : "")" aria-label="Main navigation">
+        <div class="menu-header">
+            <h2>10xJournal</h2>
+            <button class="close-button" @onclick="CloseMenu" aria-label="Close menu">×</button>
+        </div>
+        
+        <ul class="menu-items">
+            <li>
+                <a href="/app/journal" @onclick="CloseMenu" class="@GetActiveClass("/app/journal")">
+                    <span class="icon">📔</span>
+                    <span>Wszystkie wpisy</span>
+                </a>
+            </li>
+            <li>
+                <a href="/app/journal/new" @onclick="HandleNewEntryClick" class="@GetActiveClass("/app/journal/new")">
+                    <span class="icon">✏️</span>
+                    <span>Nowy wpis</span>
+                </a>
+            </li>
+            <li>
+                <a href="/settings" @onclick="CloseMenu" class="@GetActiveClass("/settings")">
+                    <span class="icon">⚙️</span>
+                    <span>Ustawienia</span>
+                </a>
+            </li>
+            <li class="menu-divider"></li>
+            <li>
+                <button @onclick="HandleLogoutAsync" type="button" class="logout-button">
+                    <span class="icon">🚪</span>
+                    <span>Wyloguj</span>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Mobile: Bottom Navigation Bar -->
+    <nav class="bottom-nav" aria-label="Quick navigation">
+        <a href="/app/journal" class="nav-item @GetActiveClass("/app/journal")">
+            <span class="icon">📔</span>
+            <span class="label">Wszystkie wpisy</span>
+        </a>
+        <a href="/app/journal/new" @onclick:preventDefault="true" @onclick="HandleNewEntryClick" class="nav-item @GetActiveClass("/app/journal/new")">
+            <span class="icon">✏️</span>
+            <span class="label">Nowy wpis</span>
+        </a>
+        <a href="/settings" class="nav-item @GetActiveClass("/settings")">
+            <span class="icon">⚙️</span>
+            <span class="label">Ustawienia</span>
+        </a>
+    </nav>
+</div>
 
 @code {
+    private bool _isMenuOpen = false;
+
+    private void ToggleMenu()
+    {
+        _isMenuOpen = !_isMenuOpen;
+    }
+
+    private void CloseMenu()
+    {
+        _isMenuOpen = false;
+    }
+
+    private void HandleNewEntryClick()
+    {
+        CloseMenu();
+        // Navigate to new entry page
+        NavigationManager.NavigateTo("/app/journal/new");
+    }
+
     private async Task HandleLogoutAsync()
     {
+        CloseMenu();
         await LogoutHandler.LogoutAsync();
+    }
+
+    private string GetActiveClass(string path)
+    {
+        var currentPath = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).AbsolutePath;
+        
+        // Exact match for new entry
+        if (path == "/app/journal/new" && currentPath == "/app/journal/new")
+        {
+            return "active";
+        }
+        
+        // For journal list, only match exactly, not when editing
+        if (path == "/app/journal" && currentPath == "/app/journal")
+        {
+            return "active";
+        }
+        
+        // For other paths
+        if (path != "/app/journal" && path != "/app/journal/new" && currentPath.StartsWith(path))
+        {
+            return "active";
+        }
+        
+        return "";
     }
 }

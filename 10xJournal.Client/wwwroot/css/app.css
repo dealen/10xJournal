@@ -112,3 +112,42 @@ code {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* ========================================
+   Dark Mode Support
+   ======================================== */
+
+/* Explicit dark mode styles when data-theme="dark" is set */
+[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+[data-theme="dark"] a,
+[data-theme="dark"] .btn-link {
+    color: #4a9eff;
+}
+
+[data-theme="dark"] .btn-primary {
+    background-color: #4a9eff;
+    border-color: #3a8eef;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+    background-color: #70b4ff;
+    border-color: #60a4ff;
+}
+
+/* Light mode explicit styles */
+[data-theme="light"] {
+    color-scheme: light;
+}
+
+[data-theme="light"] a,
+[data-theme="light"] .btn-link {
+    color: #0071c1;
+}
+
+[data-theme="light"] .btn-primary {
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}

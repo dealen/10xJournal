@@ -42,6 +42,14 @@
             }
         </header>
 
+        <div class="character-counter">
+            <span class="character-count">@GetCharacterCount() characters</span>
+            @if (GetWordCount() > 0)
+            {
+                <span class="word-count">@GetWordCount() words</span>
+            }
+        </div>
+
         <main class="editor-main">
             <textarea 
                 @ref="_textareaRef"
@@ -76,7 +84,7 @@
 
     /// <summary>
     /// Initializes the component. Loads existing entry if in edit mode,
-    /// or checks LocalStorage for unsaved draft if in create mode.
+    /// or starts with blank content if in create mode.
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
@@ -91,8 +99,9 @@
             }
             else
             {
-                // Create mode - check for unsaved draft
-                await LoadUnsavedDraftAsync();
+                // Create mode - start with blank content (no draft loading for now)
+                // We intentionally don't load drafts here to avoid showing old content
+                _content = string.Empty;
             }
         }
         catch (Exception ex)
@@ -347,6 +356,27 @@
     private void NavigateToList()
     {
         NavigationManager.NavigateTo("/app/journal");
+    }
+
+    /// <summary>
+    /// Gets the current character count of the entry content.
+    /// </summary>
+    private int GetCharacterCount()
+    {
+        return string.IsNullOrEmpty(_content) ? 0 : _content.Length;
+    }
+
+    /// <summary>
+    /// Gets the current word count of the entry content.
+    /// </summary>
+    private int GetWordCount()
+    {
+        if (string.IsNullOrWhiteSpace(_content))
+            return 0;
+
+        return _content
+            .Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries)
+            .Length;
     }
 
     /// <summary>

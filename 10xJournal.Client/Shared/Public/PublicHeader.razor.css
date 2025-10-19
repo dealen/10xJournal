@@ -1,0 +1,42 @@
+/* ========================================
+   Public Header Component
+   ======================================== */
+
+header {
+    padding: 1rem;
+}
+
+header nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+header nav a {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--pico-primary, #1b6ec2);
+    text-decoration: none;
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: inline-block;
+}
+
+header nav a:hover {
+    color: var(--pico-primary-hover, #1557a0);
+    transform: scale(1.05);
+}
+
+header nav a:active {
+    transform: scale(0.98);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+    header nav a {
+        color: var(--pico-primary, #4a9eff);
+    }
+    
+    header nav a:hover {
+        color: var(--pico-primary-hover, #70b4ff);
+    }
+}

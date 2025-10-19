@@ -30,14 +30,16 @@ public class JournalEntry : BaseModel
 
     /// <summary>
     /// Timestamp when the entry was created.
+    /// Uses DateTimeOffset to properly handle timezone-aware timestamps from Supabase.
     /// </summary>
     [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
     /// Timestamp when the entry was last updated.
+    /// Uses DateTimeOffset to properly handle timezone-aware timestamps from Supabase.
     /// </summary>
     [Column("updated_at")]
-    public DateTime UpdatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
 }
 
