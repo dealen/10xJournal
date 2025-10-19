@@ -16,10 +16,10 @@
             <p>Loading entry...</p>
         </div>
     }
-    else if (!string.IsNullOrEmpty(_errorMessage))
+    else if (!string.IsNullOrEmpty(_loadErrorMessage))
     {
         <div class="error-container" role="alert">
-            <p>@_errorMessage</p>
+            <p>@_loadErrorMessage</p>
             <button @onclick="NavigateToList">Back to Entries</button>
         </div>
     }
@@ -73,7 +73,7 @@
     private SaveStatus _saveStatus = SaveStatus.Idle;
     private DateTime? _lastSavedAt = null;
     private bool _isLoading = false;
-    private string? _errorMessage = null;
+    private string? _loadErrorMessage = null; // For blocking load/delete errors only
     private ElementReference _textareaRef;
     private Timer? _autoSaveTimer = null;
     private bool _firstRender = true;
@@ -88,30 +88,16 @@
     /// </summary>
     protected override async Task OnInitializedAsync()
     {
-        _isLoading = true;
+        await ResetComponentStateAsync();
+    }
 
-        try
-        {
-            if (Id.HasValue && Id.Value != Guid.Empty)
-            {
-                // Edit mode - load existing entry
-                await LoadEntryAsync(Id.Value);
-            }
-            else
-            {
-                // Create mode - start with blank content (no draft loading for now)
-                // We intentionally don't load drafts here to avoid showing old content
-                _content = string.Empty;
-            }
-        }
-        catch (Exception ex)
-        {
-            _errorMessage = $"Failed to load entry: {ex.Message}";
-        }
-        finally
-        {
-            _isLoading = false;
-        }
+    /// <summary>
+    /// Handles parameter changes when navigating between entries.
+    /// Resets component state when the Id parameter changes.
+    /// </summary>
+    protected override async Task OnParametersSetAsync()
+    {
+        await ResetComponentStateAsync();
     }
 
     /// <summary>
@@ -145,7 +131,7 @@
 
         if (response == null)
         {
-            _errorMessage = "Entry not found.";
+            _loadErrorMessage = "Entry not found.";
             return;
         }
 
@@ -154,23 +140,38 @@
     }
 
     /// <summary>
-    /// Attempts to load an unsaved draft from LocalStorage.
+    /// Resets component state based on the current Id parameter.
+    /// In edit mode (Id has value), loads the existing entry.
+    /// In create mode (Id is null), clears all state for a new entry.
     /// </summary>
-    private async Task LoadUnsavedDraftAsync()
+    private async Task ResetComponentStateAsync()
     {
+        _isLoading = true;
+        _loadErrorMessage = null;
+
         try
         {
-            var key = $"{LOCALSTORAGE_KEY_PREFIX}new";
-            var savedContent = await JSRuntime.InvokeAsync<string>("localStorage.getItem", key);
-            
-            if (!string.IsNullOrWhiteSpace(savedContent))
+            if (Id.HasValue && Id.Value != Guid.Empty)
             {
-                _content = savedContent;
+                // Edit mode - load existing entry
+                await LoadEntryAsync(Id.Value);
+            }
+            else
+            {
+                // Create mode - reset all state for new entry
+                _content = string.Empty;
+                _entryId = null;
+                _saveStatus = SaveStatus.Idle;
+                _lastSavedAt = null;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // LocalStorage access failed, continue with empty content
+            _loadErrorMessage = $"Failed to load entry: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
         }
     }
 
@@ -215,7 +216,7 @@
                 if (currentUserId == null || currentUserId == Guid.Empty)
                 {
                     _saveStatus = SaveStatus.Error;
-                    _errorMessage = "Could not determine current user. Please log in again.";
+                    // Save errors are communicated via SaveStatusIndicator, not by hiding the editor
                     await InvokeAsync(StateHasChanged);
                     return;
                 }
@@ -259,10 +260,10 @@
                 _saveStatus = SaveStatus.Saved;
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _saveStatus = SaveStatus.Error;
-            _errorMessage = $"Failed to save: {ex.Message}";
+            // Save errors are communicated via SaveStatusIndicator, not by hiding the editor
         }
 
         await InvokeAsync(StateHasChanged);
@@ -335,7 +336,8 @@
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Failed to delete entry: {ex.Message}";
+            // Delete error should be blocking since the entry might be in an inconsistent state
+            _loadErrorMessage = $"Failed to delete entry: {ex.Message}";
         }
     }
 
