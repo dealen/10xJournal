@@ -19,13 +19,15 @@ public class UserProfile : BaseModel
 
     /// <summary>
     /// Timestamp when the profile was created.
+    /// Database handles this value automatically via DEFAULT now(), so we ignore it on insert.
     /// </summary>
-    [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
+    [Column("created_at", ignoreOnInsert: true)]
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
     /// Timestamp when the profile was last updated.
+    /// Database handles this value automatically via DEFAULT now(), so we ignore it on insert and update.
     /// </summary>
-    [Column("updated_at")]
-    public DateTime UpdatedAt { get; set; }
+    [Column("updated_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
+    public DateTimeOffset UpdatedAt { get; set; }
 }
