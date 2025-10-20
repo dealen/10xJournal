@@ -1,7 +1,8 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
 @using _10xJournal.Client.Features.Authentication.Services
-@inject Supabase.Client SupabaseClient
+@using _10xJournal.Client.Features.Authentication.Register
+@inject IAuthService AuthService
 @inject ILogger<LoginForm> Logger
 
 <EditForm Model="loginModel" OnValidSubmit="HandleValidSubmit" aria-busy="@isBusy">
@@ -53,7 +54,7 @@
 
         try
         {
-            await SupabaseClient.Auth.SignIn(loginModel.Email, loginModel.Password);
+            await AuthService.LoginAsync(loginModel.Email, loginModel.Password);
 
             if (OnLoginSuccess.HasDelegate)
             {

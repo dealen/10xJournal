@@ -1,0 +1,59 @@
+@inject ILogger<DeleteAccountSection> Logger
+
+<section aria-labelledby="delete-account-heading">
+    <h2 id="delete-account-heading">Usuwanie konta</h2>
+    <p>Trwale usuń swoje konto i wszystkie dane. <strong>Ta operacja jest nieodwracalna.</strong></p>
+    
+    <button @onclick="OpenDeleteModal" 
+            class="contrast" 
+            aria-haspopup="dialog">
+        Usuń moje konto
+    </button>
+</section>
+
+@if (showDeleteModal)
+{
+    <DeleteAccountModal 
+        OnConfirm="HandleAccountDeleted"
+        OnCancel="CloseDeleteModal" />
+}
+
+@code {
+    private bool showDeleteModal = false;
+
+    [Parameter]
+    public EventCallback OnAccountDeleted { get; set; }
+
+    /// <summary>
+    /// Opens the account deletion confirmation modal.
+    /// </summary>
+    private void OpenDeleteModal()
+    {
+        showDeleteModal = true;
+        Logger.LogInformation("Delete account modal opened");
+    }
+
+    /// <summary>
+    /// Closes the account deletion confirmation modal.
+    /// </summary>
+    private void CloseDeleteModal()
+    {
+        showDeleteModal = false;
+        Logger.LogInformation("Delete account modal closed");
+    }
+
+    /// <summary>
+    /// Manages successful account deletion.
+    /// Notifies the parent component.
+    /// </summary>
+    private async Task HandleAccountDeleted()
+    {
+        showDeleteModal = false;
+        Logger.LogInformation("Account deletion confirmed, notifying parent");
+
+        if (OnAccountDeleted.HasDelegate)
+        {
+            await OnAccountDeleted.InvokeAsync();
+        }
+    }
+}

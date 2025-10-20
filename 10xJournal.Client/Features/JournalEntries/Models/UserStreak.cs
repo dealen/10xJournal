@@ -12,9 +12,10 @@ public class UserStreak : BaseModel
 {
     /// <summary>
     /// The ID of the user who owns this streak record.
+    /// This is the primary key and references the user's profile ID.
     /// </summary>
     [PrimaryKey("user_id", false)]
-    public Guid UserId { get; set; }
+    public Guid? UserId { get; set; }
 
     /// <summary>
     /// The current streak - number of consecutive days with journal entries.

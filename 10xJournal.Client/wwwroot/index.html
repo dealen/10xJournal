@@ -28,6 +28,14 @@
         <span class="dismiss">🗙</span>
     </div>
     <script src="js/theme.js"></script>
+    <script src="js/export.js"></script>
+    <script>
+        // Helper function to get URL hash fragment for authentication flows
+        // Used by UpdatePasswordPage and registration confirmation flows
+        window.getLocationHash = function() {
+            return window.location.hash;
+        };
+    </script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

@@ -1,0 +1,327 @@
+@using _10xJournal.Client.Features.Settings.DeleteAccount.Models
+@using _10xJournal.Client.Features.Settings.ExportData.Models
+@using System.Text.Json
+@inject Supabase.Client SupabaseClient
+@inject IJSRuntime JSRuntime
+@inject ILogger<DeleteAccountModal> Logger
+
+<div class="modal-overlay" @onclick="HandleOverlayClick">
+    <div class="modal-content" @onclick:stopPropagation="true">
+        <article>
+            <header>
+                <h2>Usuwanie konta</h2>
+            </header>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <p role="alert" style="color: var(--del-color);">@errorMessage</p>
+            }
+
+            <!-- Step 1: Data Export (Optional) -->
+            @if (!hasExported && !skipExport)
+            {
+                <section>
+                    <h3>📦 Krok 1: Eksport danych</h3>
+                    <p>Przed usunięciem konta zalecamy wyeksportowanie wszystkich wpisów. Ta operacja jest <strong>nieodwracalna</strong>.</p>
+                    
+                    @if (isExportingInModal)
+                    {
+                        <p aria-live="polite">Eksportowanie danych...</p>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(exportSuccessMessage))
+                    {
+                        <p role="status" style="color: var(--ins-color);">✓ @exportSuccessMessage</p>
+                    }
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <button @onclick="HandleExportInModal" 
+                                disabled="@isExportingInModal" 
+                                aria-disabled="@isExportingInModal">
+                            @(isExportingInModal ? "Eksportowanie..." : "Eksportuj teraz")
+                        </button>
+                        <button @onclick="SkipExport" 
+                                class="secondary" 
+                                disabled="@isExportingInModal">
+                            Pomiń ten krok
+                        </button>
+                    </div>
+                </section>
+            }
+
+            <!-- Step 2: Password Verification -->
+            @if (hasExported || skipExport)
+            {
+                <section>
+                    <h3>🔐 Krok 2: Weryfikacja hasła</h3>
+                    <p>Potwierdź swoją tożsamość, wprowadzając hasło do konta.</p>
+                    
+                    <label for="delete-password">Twoje hasło</label>
+                    <input id="delete-password" 
+                           type="password" 
+                           @bind="password" 
+                           @bind:event="oninput"
+                           autocomplete="current-password"
+                           disabled="@isDeleting"
+                           placeholder="Wpisz swoje hasło" />
+                </section>
+            }
+
+            <!-- Step 3: Confirmation -->
+            @if ((hasExported || skipExport) && !string.IsNullOrWhiteSpace(password))
+            {
+                <section>
+                    <h3>⚠️ Krok 3: Potwierdzenie</h3>
+                    <p>Aby potwierdzić usunięcie konta, wpisz dokładnie poniższą frazę:</p>
+                    <p><strong><code>usuń moje dane</code></strong></p>
+                    
+                    <label for="delete-confirmation">Fraza potwierdzająca</label>
+                    <input id="delete-confirmation" 
+                           type="text" 
+                           @bind="confirmationPhrase" 
+                           @bind:event="oninput"
+                           disabled="@isDeleting"
+                           placeholder="usuń moje dane" />
+                </section>
+            }
+
+            <footer>
+                @if (isDeleting)
+                {
+                    <p aria-live="polite">Usuwanie konta...</p>
+                }
+
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button @onclick="HandleCancel" 
+                            class="secondary" 
+                            disabled="@isDeleting">
+                        Anuluj
+                    </button>
+                    <button @onclick="HandleDelete" 
+                            class="contrast" 
+                            disabled="@(!IsDeleteEnabled || isDeleting)"
+                            aria-disabled="@(!IsDeleteEnabled || isDeleting)">
+                        @(isDeleting ? "Usuwanie..." : "Usuń konto na zawsze")
+                    </button>
+                </div>
+            </footer>
+        </article>
+    </div>
+</div>
+
+@code {
+    private string password = string.Empty;
+    private string confirmationPhrase = string.Empty;
+    private bool hasExported = false;
+    private bool skipExport = false;
+    private bool isExportingInModal = false;
+    private bool isDeleting = false;
+    private string? errorMessage;
+    private string? exportSuccessMessage;
+
+    [Parameter]
+    public EventCallback OnConfirm { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    /// <summary>
+    /// Tells if the delete button is enabled.
+    /// All conditions must be met.
+    /// </summary>
+    private bool IsDeleteEnabled =>
+        (hasExported || skipExport) &&
+        !string.IsNullOrWhiteSpace(password) &&
+        confirmationPhrase == "usuń moje dane";
+
+    /// <summary>
+    /// Manages data export in the modal.
+    /// Uses the same logic as ExportDataButton.
+    /// </summary>
+    private async Task HandleExportInModal()
+    {
+        if (isExportingInModal)
+        {
+            return;
+        }
+
+        isExportingInModal = true;
+        errorMessage = null;
+        exportSuccessMessage = null;
+
+        try
+        {
+            Logger.LogInformation("Starting journal entries export from delete modal");
+
+            var result = await SupabaseClient
+                .Rpc("export_journal_entries", null);
+
+            if (result?.Content == null)
+            {
+                throw new InvalidOperationException("Empty response from export endpoint");
+            }
+
+            var exportData = JsonSerializer.Deserialize<ExportDataResponse>(
+                result.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (exportData == null)
+            {
+                throw new InvalidOperationException("Failed to parse export data");
+            }
+
+            var fileName = $"10xjournal-export-{DateTime.Now:yyyy-MM-dd-HHmmss}.json";
+            var jsonContent = JsonSerializer.Serialize(exportData, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, jsonContent);
+
+            exportSuccessMessage = $"Wyeksportowano {exportData.TotalEntries} {GetEntriesWord(exportData.TotalEntries)}.";
+            hasExported = true;
+            Logger.LogInformation("Successfully exported {Count} entries from delete modal", exportData.TotalEntries);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during data export in delete modal");
+            errorMessage = "Nie udało się wyeksportować danych. Możesz pominąć ten krok i kontynuować.";
+        }
+        finally
+        {
+            isExportingInModal = false;
+        }
+    }
+
+    /// <summary>
+    /// Skips data export step.
+    /// </summary>
+    private void SkipExport()
+    {
+        skipExport = true;
+        Logger.LogInformation("User skipped data export step");
+    }
+
+    /// <summary>
+    /// Manages overlay click events (closes the modal).
+    /// </summary>
+    private async Task HandleOverlayClick()
+    {
+        if (!isDeleting)
+        {
+            await HandleCancel();
+        }
+    }
+
+    /// <summary>
+    /// Manages cancellation of the account deletion process.
+    /// </summary>
+    private async Task HandleCancel()
+    {
+        if (isDeleting)
+        {
+            return;
+        }
+
+        if (OnCancel.HasDelegate)
+        {
+            await OnCancel.InvokeAsync();
+        }
+    }
+
+    /// <summary>
+    /// Manages the final account deletion.
+    /// First verifies the password, then calls the RPC delete_my_account.
+    /// </summary>
+    private async Task HandleDelete()
+    {
+        if (!IsDeleteEnabled || isDeleting)
+        {
+            return;
+        }
+
+        isDeleting = true;
+        errorMessage = null;
+
+        try
+        {
+            // Step 1: Password Verification
+            Logger.LogInformation("Verifying user password before account deletion");
+            
+            var currentUser = SupabaseClient.Auth.CurrentUser;
+            if (currentUser?.Email == null)
+            {
+                throw new InvalidOperationException("User not authenticated");
+            }
+
+            // Attempt login with the provided password as verification
+            try
+            {
+                await SupabaseClient.Auth.SignIn(currentUser.Email, password);
+            }
+            catch (Supabase.Gotrue.Exceptions.GotrueException)
+            {
+                errorMessage = "Nieprawidłowe hasło. Spróbuj ponownie.";
+                isDeleting = false;
+                return;
+            }
+
+            // Step 2: Call RPC to delete account
+            Logger.LogInformation("Password verified, proceeding with account deletion");
+
+            var result = await SupabaseClient
+                .Rpc("delete_my_account", null);
+
+            if (result?.Content == null)
+            {
+                throw new InvalidOperationException("Empty response from delete endpoint");
+            }
+
+            var deleteResponse = JsonSerializer.Deserialize<DeleteAccountResponse>(
+                result.Content,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (deleteResponse?.Success != true)
+            {
+                throw new InvalidOperationException("Account deletion failed");
+            }
+
+            Logger.LogInformation("Account successfully deleted");
+
+            // Inform parent component of successful deletion
+            if (OnConfirm.HasDelegate)
+            {
+                await OnConfirm.InvokeAsync();
+            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            Logger.LogError(ex, "Error during account deletion");
+            errorMessage = "Nie udało się usunąć konta. Spróbuj ponownie później.";
+            isDeleting = false;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Unexpected error during account deletion");
+            errorMessage = "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później.";
+            isDeleting = false;
+        }
+    }
+
+    /// <summary>
+    /// Returns the appropriate form of the word "wpis" based on the number.
+    /// </summary>
+    private static string GetEntriesWord(int count)
+    {
+        if (count == 1) return "wpis";
+        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20))
+            return "wpisy";
+        return "wpisów";
+    }
+}

@@ -1,0 +1,70 @@
+/* Modal overlay - tło z półprzezroczystym ciemnym kolorem */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+/* Zawartość modalu */
+.modal-content {
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Animacja pojawienia się modalu */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsywność dla małych ekranów */
+@media (max-width: 768px) {
+    .modal-content {
+        max-width: 100%;
+        max-height: 100vh;
+        margin: 0;
+    }
+    
+    .modal-overlay {
+        padding: 0;
+    }
+}
+
+/* Style dla sekcji z krokami */
+.modal-content section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    border-left: 3px solid var(--primary);
+    background-color: var(--card-background-color);
+}
+
+.modal-content section h3 {
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+/* Style dla kodu inline (fraza potwierdzająca) */
+.modal-content code {
+    background-color: var(--code-background-color);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+}

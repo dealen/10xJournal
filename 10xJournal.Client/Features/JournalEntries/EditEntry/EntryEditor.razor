@@ -112,9 +112,10 @@
             {
                 await JSRuntime.InvokeVoidAsync("eval", $"document.querySelector('.entry-textarea')?.focus()");
             }
-            catch
+            catch (Exception ex)
             {
-                // Focus failed, not critical
+                // need logging to console here
+                Console.WriteLine($"Failed to focus textarea: {ex.Message}");
             }
         }
     }
@@ -260,9 +261,10 @@
                 _saveStatus = SaveStatus.Saved;
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             _saveStatus = SaveStatus.Error;
+            Console.WriteLine($"Failed to save entry: {ex.Message}");
             // Save errors are communicated via SaveStatusIndicator, not by hiding the editor
         }
 
@@ -282,9 +284,9 @@
             
             await JSRuntime.InvokeVoidAsync("localStorage.setItem", key, _content);
         }
-        catch
+        catch (Exception ex)
         {
-            // LocalStorage save failed, not critical
+            Console.WriteLine($"Failed to save draft to LocalStorage: {ex.Message}");
         }
     }
 
@@ -301,9 +303,9 @@
             
             await JSRuntime.InvokeVoidAsync("localStorage.removeItem", key);
         }
-        catch
+        catch (Exception ex)
         {
-            // LocalStorage clear failed, not critical
+            Console.WriteLine($"Failed to clear draft from LocalStorage: {ex.Message}");
         }
     }
 
@@ -338,6 +340,8 @@
         {
             // Delete error should be blocking since the entry might be in an inconsistent state
             _loadErrorMessage = $"Failed to delete entry: {ex.Message}";
+
+            Console.WriteLine($"Failed to delete entry: {ex.Message}");
         }
     }
 

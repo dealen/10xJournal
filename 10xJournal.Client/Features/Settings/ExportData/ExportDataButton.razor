@@ -1,0 +1,122 @@
+@using _10xJournal.Client.Features.Settings.ExportData.Models
+@using System.Text.Json
+@inject Supabase.Client SupabaseClient
+@inject IJSRuntime JSRuntime
+@inject ILogger<ExportDataButton> Logger
+
+<section aria-labelledby="export-heading">
+    <h2 id="export-heading">Eksport danych</h2>
+    <p>Pobierz kopię wszystkich swoich wpisów w formacie JSON.</p>
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <p role="alert" style="color: var(--del-color);">@errorMessage</p>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(successMessage))
+    {
+        <p role="status" style="color: var(--ins-color);">@successMessage</p>
+    }
+
+    @if (isExporting)
+    {
+        <p aria-live="polite">Eksportuję dane...</p>
+    }
+
+    <button @onclick="HandleExport" disabled="@isExporting" aria-disabled="@isExporting">
+        @(isExporting ? "Eksportowanie..." : "Eksportuj dane")
+    </button>
+</section>
+
+@code {
+    private bool isExporting = false;
+    private string? errorMessage;
+    private string? successMessage;
+
+    [Parameter]
+    public EventCallback OnExportComplete { get; set; }
+
+    /// <summary>
+    /// Manages export of every journal entry.
+    /// Calls RPC on Supabase and generates a JSON file for download.
+    /// </summary>
+    private async Task HandleExport()
+    {
+        if (isExporting)
+        {
+            return;
+        }
+
+        isExporting = true;
+        errorMessage = null;
+        successMessage = null;
+
+        try
+        {
+            Logger.LogInformation("Starting journal entries export");
+
+            // Call RPC function export_journal_entries
+            var result = await SupabaseClient
+                .Rpc("export_journal_entries", null);
+
+            if (result?.Content == null)
+            {
+                throw new InvalidOperationException("Empty response from export endpoint");
+            }
+
+            // Parsing the JSON response
+            var exportData = JsonSerializer.Deserialize<ExportDataResponse>(
+                result.Content,
+                new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true 
+                });
+
+            if (exportData == null)
+            {
+                throw new InvalidOperationException("Failed to parse export data");
+            }
+
+            // Generating file name with export date
+            var fileName = $"10xjournal-export-{DateTime.Now:yyyy-MM-dd-HHmmss}.json";
+
+            // Converting to formatted JSON
+            var jsonContent = JsonSerializer.Serialize(exportData, new JsonSerializerOptions 
+            { 
+                WriteIndented = true 
+            });
+
+            // Calling JavaScript to download the file
+            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, jsonContent);
+
+            successMessage = $"Pomyślnie wyeksportowano {exportData.TotalEntries} {GetEntriesWord(exportData.TotalEntries)}.";
+            Logger.LogInformation("Successfully exported {Count} entries", exportData.TotalEntries);
+
+            // Inform parent component about export completion
+            if (OnExportComplete.HasDelegate)
+            {
+                await OnExportComplete.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during data export");
+            errorMessage = "Nie udało się wyeksportować danych. Spróbuj ponownie.";
+        }
+        finally
+        {
+            isExporting = false;
+        }
+    }
+
+    /// <summary>
+    /// Returns the appropriate form of the word "wpis" based on the count.
+    /// </summary>
+    private static string GetEntriesWord(int count)
+    {
+        if (count == 1) return "wpis";
+        if (count % 10 >= 2 && count % 10 <= 4 && (count % 100 < 10 || count % 100 >= 20))
+            return "wpisy";
+        return "wpisów";
+    }
+}

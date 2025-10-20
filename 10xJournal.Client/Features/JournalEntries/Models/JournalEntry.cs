@@ -12,9 +12,10 @@ public class JournalEntry : BaseModel
 {
     /// <summary>
     /// Unique identifier for the journal entry.
+    /// Database generates this value automatically, so it's nullable and not included on insert.
     /// </summary>
     [PrimaryKey("id", false)]
-    public Guid Id { get; set; }
+    public Guid? Id { get; set; }
 
     /// <summary>
     /// The ID of the user who created this entry.

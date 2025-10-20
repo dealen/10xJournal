@@ -1,37 +1,120 @@
-@page "/settings"
-@using _10xJournal.Client.Features.Authentication.Logout
-@inject LogoutHandler LogoutHandler
+@page "/app/settings"
+@using _10xJournal.Client.Features.Settings.ChangePassword
+@using _10xJournal.Client.Features.Settings.ExportData
+@using _10xJournal.Client.Features.Settings.DeleteAccount
+@inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
+@inject ILogger<Settings> Logger
 
 <PageTitle>Ustawienia - 10xJournal</PageTitle>
 
-<h1>Ustawienia</h1>
+<div class="settings-container">
+    <h1>Ustawienia konta</h1>
 
-<section>
-    <h2>Zmiana hasła</h2>
-    <p>Zaktualizuj hasło do swojego konta.</p>
-    <button @onclick="NavigateToChangePassword">Zmień hasło</button>
-</section>
-
-<section>
-    <h2>Bezpieczeństwo konta</h2>
-    <button @onclick="HandleLogoutAsync" class="secondary">Wyloguj się</button>
-</section>
-
-<section>
-    <h2>Usuwanie konta</h2>
-    <p>Trwale usuń swoje konto i wszystkie dane.</p>
-    <button class="contrast" disabled>Usuń konto (wkrótce)</button>
-</section>
-
-@code {
-    private async Task HandleLogoutAsync()
+    @if (!string.IsNullOrWhiteSpace(globalSuccessMessage))
     {
-        await LogoutHandler.LogoutAsync();
+        <p role="status" style="color: var(--ins-color);">@globalSuccessMessage</p>
     }
 
-    private void NavigateToChangePassword()
+    @if (!string.IsNullOrWhiteSpace(globalErrorMessage))
     {
-        NavigationManager.NavigateTo("/update-password");
+        <p role="alert" style="color: var(--del-color);">@globalErrorMessage</p>
+    }
+
+    <!-- Password reset section -->
+    <ChangePasswordForm OnPasswordChanged="HandlePasswordChanged" />
+
+    <!-- Logout section -->
+    <section aria-labelledby="logout-heading">
+        <h2 id="logout-heading">Sesja</h2>
+        <p>Wyloguj się ze swojego konta.</p>
+        <button @onclick="HandleLogout" disabled="@isLoggingOut" aria-disabled="@isLoggingOut">
+            @(isLoggingOut ? "Wylogowywanie..." : "Wyloguj się")
+        </button>
+    </section>
+
+    <!-- Data export section -->
+    <ExportDataButton OnExportComplete="HandleExportComplete" />
+
+    <!-- Account deletion section -->
+    <DeleteAccountSection OnAccountDeleted="HandleAccountDeleted" />
+</div>
+
+@code {
+    private string? globalSuccessMessage;
+    private string? globalErrorMessage;
+    private bool isLoggingOut = false;
+
+    /// <summary>
+    /// Manages user logout.
+    /// </summary>
+    private async Task HandleLogout()
+    {
+        if (isLoggingOut)
+        {
+            return;
+        }
+
+        isLoggingOut = true;
+        globalErrorMessage = null;
+        globalSuccessMessage = null;
+
+        try
+        {
+            await SupabaseClient.Auth.SignOut();
+            Logger.LogInformation("User successfully logged out");
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during logout");
+            globalErrorMessage = "Wystąpił błąd podczas wylogowania. Spróbuj ponownie.";
+            isLoggingOut = false;
+        }
+    }
+
+    /// <summary>
+    /// Manages the successful password change.
+    /// Displays a success message at the page level.
+    /// </summary>
+    private void HandlePasswordChanged()
+    {
+        globalSuccessMessage = "Hasło zostało zmienione. Wszystkie inne sesje zostały wylogowane.";
+        globalErrorMessage = null;
+    }
+
+    /// <summary>
+    /// Manages the successful export of data.
+    /// Displays a success message at the page level.
+    /// </summary>
+    private void HandleExportComplete()
+    {
+        // ExportDataButton already displays its own success message
+        // This callback can be used for additional page-level actions if needed
+        Logger.LogInformation("Export completed successfully");
+    }
+
+    /// <summary>
+    /// Manages successful account deletion.
+    /// Notifies the parent component.
+    /// </summary>
+    private async Task HandleAccountDeleted()
+    {
+        Logger.LogInformation("Account deleted, signing out user");
+
+        try
+        {
+            // Sign out user
+            await SupabaseClient.Auth.SignOut();
+
+            // Redirect to home page with forced reload
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error during post-deletion logout");
+            // In case of logout error, still redirect user
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        }
     }
 }
