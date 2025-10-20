@@ -18,7 +18,10 @@ builder.Services.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.H
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 
 var devUserOptions = builder.Configuration.GetSection("DevUser").Get<DevUserOptions>() ?? new DevUserOptions();
-builder.Services.AddSingleton(Options.Create(devUserOptions));
+if (devUserOptions != null && devUserOptions.Enabled)
+{
+    builder.Services.AddSingleton(Options.Create(devUserOptions));
+}
 builder.Services.AddScoped<CurrentUserAccessor>();
 builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<LogoutHandler>();

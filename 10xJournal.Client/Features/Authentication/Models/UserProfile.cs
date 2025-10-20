@@ -13,20 +13,22 @@ public class UserProfile : BaseModel
     /// <summary>
     /// Unique identifier for the user profile.
     /// This matches the user's auth.users.id from Supabase Auth.
+    /// Must be explicitly set during insert to match the authenticated user's ID.
     /// </summary>
     [PrimaryKey("id", false)]
+    [Column("id")]
     public Guid Id { get; set; }
 
     /// <summary>
     /// Timestamp when the profile was created.
-    /// Database handles this value automatically via DEFAULT now(), so we ignore it on insert.
+    /// Database handles this value automatically via DEFAULT now().
     /// </summary>
-    [Column("created_at", ignoreOnInsert: true)]
+    [Column("created_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
     /// Timestamp when the profile was last updated.
-    /// Database handles this value automatically via DEFAULT now(), so we ignore it on insert and update.
+    /// Database handles this value automatically via triggers.
     /// </summary>
     [Column("updated_at", ignoreOnInsert: true, ignoreOnUpdate: true)]
     public DateTimeOffset UpdatedAt { get; set; }

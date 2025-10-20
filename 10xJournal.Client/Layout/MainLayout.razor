@@ -37,8 +37,8 @@ else
     {
         var path = NavigationManager.ToAbsoluteUri(NavigationManager.Uri).AbsolutePath;
         
-        // Authenticated routes start with /app or /settings
-        _isAuthenticatedRoute = path.StartsWith("/app") || path.StartsWith("/settings");
+        // Authenticated routes start with /app
+        _isAuthenticatedRoute = path.StartsWith("/app");
     }
 
     public void Dispose()

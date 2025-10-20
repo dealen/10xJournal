@@ -461,3 +461,51 @@ public async Task RegisterAsync(string email, string password)
 3. Register new user and verify profile creation
 4. Test journal entry creation (should work without errors)
 5. Refresh page and verify session persists
+
+---
+
+## Step 21: Implemented Account Deletion Function
+
+**Date**: October 19, 2025
+
+**Rationale**: Users needed the ability to permanently delete their accounts and all associated data. The delete account feature was implemented in the UI but missing the critical database function to perform the deletion.
+
+**Actions**:
+- Created migration `20251019110000_create_delete_my_account_function.sql`
+- Implemented `public.delete_my_account()` PostgreSQL function with the following features:
+  - Returns JSON response matching the C# `DeleteAccountResponse` model
+  - Uses `SECURITY DEFINER` to allow deletion from `auth.users` table
+  - Explicitly deletes journal entries, profile, and auth user in proper order
+  - Includes comprehensive error handling and logging with NOTICE and WARNING levels
+  - Returns structured JSON with success status, message, and metadata
+- Granted execute permissions to `authenticated` role only
+- Explicitly revoked permissions from `anon` role for security
+- Applied migration via `supabase db reset`
+
+**Outcome**: 
+- Account deletion feature now works end-to-end
+- Users can permanently delete their accounts with all associated data
+- Function follows the existing migration pattern and documentation standards
+- Proper security restrictions prevent unauthorized deletions
+
+**Alignment**:
+- **Security by Design**: Function requires authentication and uses proper security definer pattern
+- **Database Integrity**: Explicit cascade deletion ensures no orphaned records
+- **Error Handling**: Comprehensive exception handling with structured JSON responses
+- **Documentation**: Migration includes detailed header comments following project conventions
+- **Vertical Slice**: Deletion logic contained in single database function, called directly from feature slice
+- **Simplicity First**: Direct RPC call from Blazor component to database function
+
+**Key Technical Details**:
+1. **Security Definer Pattern**: Required to allow deletion from `auth.users` which normal users cannot access
+2. **JSON Response Structure**: Matches C# model expectations with `success`, `message`, and metadata fields
+3. **Transaction Safety**: All deletions occur within single transaction (implicit in PostgreSQL function)
+4. **Audit Trail**: Uses PostgreSQL NOTICE logging to track deletion progress
+5. **Permission Model**: Only authenticated users can execute, anonymous users explicitly blocked
+
+**Migration Pattern Followed**:
+- Timestamp-based naming: `20251019110000_create_delete_my_account_function.sql`
+- Header documentation block with description, dependencies, and notes
+- Function creation with proper security settings
+- Permission grants and revocations
+- Descriptive comments for documentation
