@@ -26,6 +26,7 @@ builder.Services.AddScoped<CurrentUserAccessor>();
 builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
 builder.Services.AddScoped<LogoutHandler>();
 builder.Services.AddScoped<WelcomeEntryService>();
+builder.Services.AddScoped<_10xJournal.Client.Features.JournalEntries.Services.IJournalDataService, _10xJournal.Client.Features.JournalEntries.Services.SupabaseJournalDataService>();
 
 builder.Services.AddScoped(provider =>
 {

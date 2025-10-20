@@ -47,8 +47,10 @@
     }
 </main>
 
+@using _10xJournal.Client.Features.JournalEntries.Services
+
 @code {
-    [Inject] private Supabase.Client SupabaseClient { get; set; } = default!;
+    [Inject] private IJournalDataService JournalDataService { get; set; } = default!;
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
 
     private List<JournalEntry> _entries = new();
@@ -85,19 +87,7 @@
     {
         try
         {
-            var response = await SupabaseClient
-                .From<JournalEntry>()
-                .Order(entry => entry.CreatedAt, Supabase.Postgrest.Constants.Ordering.Descending)
-                .Get();
-
-            if (response?.Models != null)
-            {
-                _entries = response.Models;
-            }
-            else
-            {
-                _entries = new List<JournalEntry>();
-            }
+            _entries = await JournalDataService.GetEntriesAsync();
         }
         catch (Exception ex) when (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
         {
@@ -124,13 +114,10 @@
     {
         try
         {
-            var response = await SupabaseClient
-                .From<_10xJournal.Client.Features.JournalEntries.Models.UserStreak>()
-                .Get();
-
-            if (response?.Models != null && response.Models.Count > 0)
+            var streak = await JournalDataService.GetStreakAsync();
+            if (streak != null)
             {
-                _currentStreak = response.Models[0].CurrentStreak;
+                _currentStreak = streak.CurrentStreak;
             }
             else
             {
@@ -144,6 +131,7 @@
             _currentStreak = 0;
         }
     }
+
 
     private void NavigateToNewEntry()
     {
