@@ -1,6 +1,6 @@
 using System;
 
-namespace _10xJournal.Client.Features.Authentication.Services;
+namespace _10xJournal.Client.Infrastructure.ErrorHandling;
 
 /// <summary>
 /// Central place for translating Supabase authentication errors into user-facing messages.

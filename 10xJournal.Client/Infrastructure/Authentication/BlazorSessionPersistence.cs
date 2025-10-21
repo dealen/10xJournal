@@ -3,7 +3,7 @@ using Supabase.Gotrue.Interfaces;
 using System.Text.Json;
 using Microsoft.JSInterop;
 
-namespace _10xJournal.Client.Features.Authentication.Services;
+namespace _10xJournal.Client.Infrastructure.Authentication;
 
 /// <summary>
 /// Handles session persistence for Supabase authentication in Blazor WebAssembly.

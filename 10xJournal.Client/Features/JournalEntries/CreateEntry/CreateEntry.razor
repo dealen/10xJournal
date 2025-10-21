@@ -3,7 +3,7 @@
 @page "/journal/create"
 @using _10xJournal.Client.Features.JournalEntries.Models
 @using _10xJournal.Client.Features.JournalEntries.CreateEntry
-@using _10xJournal.Client.Features.Authentication.Services
+@using _10xJournal.Client.Infrastructure.Authentication
 @inject Supabase.Client SupabaseClient
 @inject NavigationManager NavigationManager
 @inject ILogger<CreateEntry> Logger

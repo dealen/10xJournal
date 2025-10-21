@@ -1,8 +1,8 @@
 @using System
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
-@using _10xJournal.Client.Features.Authentication.Services
-@inject IAuthService AuthService
+@using _10xJournal.Client.Infrastructure.ErrorHandling
+@inject RegisterHandler RegisterHandler
 @inject ILogger<RegisterForm> Logger
 
 <EditForm Model="model" OnValidSubmit="HandleValidSubmit">
@@ -51,7 +51,7 @@
 
         try
         {
-            await AuthService.RegisterAsync(model.Email.Trim(), model.Password);
+            await RegisterHandler.RegisterAsync(model.Email.Trim(), model.Password);
 
             if (OnRegisterSuccess.HasDelegate)
             {

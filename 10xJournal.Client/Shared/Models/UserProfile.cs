@@ -1,7 +1,7 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-namespace _10xJournal.Client.Features.Authentication.Models;
+namespace _10xJournal.Client.Shared.Models;
 
 /// <summary>
 /// Represents a user profile from the database.

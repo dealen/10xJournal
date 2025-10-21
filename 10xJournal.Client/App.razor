@@ -25,7 +25,7 @@
             try
             {
                 // Set up session persistence using browser localStorage
-                var sessionPersistence = new _10xJournal.Client.Features.Authentication.Services.BlazorSessionPersistence(JSRuntime);
+                var sessionPersistence = new _10xJournal.Client.Infrastructure.Authentication.BlazorSessionPersistence(JSRuntime);
                 SupabaseClient.Auth.SetPersistence(sessionPersistence);
                 
                 // Restore persisted session from localStorage

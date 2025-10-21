@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace _10xJournal.Client.Features.JournalEntries.Models;
+namespace _10xJournal.Client.Features.JournalEntries.EditEntry;
 
 /// <summary>
 /// Request model for updating an existing journal entry.
@@ -19,24 +19,18 @@ public class UpdateJournalEntryRequest
     /// Optional: The ID of the journal entry to update.
     /// </summary>
     [JsonPropertyName("id")]
-    public Guid? Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <summary>
-    /// Optional: The updated user ID.
+    /// The ID of the user who owns this entry.
+    /// This is not actually updateable but included for validation.
     /// </summary>
     [JsonPropertyName("user_id")]
-    public Guid? UserId { get; set; }
+    public Guid UserId { get; set; }
 
     /// <summary>
-    /// Optional: The updated creation timestamp.
+    /// Optional: Flag to mark the entry as a favorite.
     /// </summary>
-    [JsonPropertyName("created_at")]
-    public DateTime? CreatedAt { get; set; }
-
-    /// <summary>
-    /// Optional: The updated timestamp.
-    /// Typically set automatically by the database.
-    /// </summary>
-    [JsonPropertyName("updated_at")]
-    public DateTime? UpdatedAt { get; set; }
+    [JsonPropertyName("is_favorite")]
+    public bool? IsFavorite { get; set; }
 }

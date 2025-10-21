@@ -1,25 +1,32 @@
-using Microsoft.Extensions.Logging;
-using _10xJournal.Client.Features.Authentication.Models;
-using _10xJournal.Client.Features.JournalEntries.Models;
-using _10xJournal.Client.Features.Authentication.Register.Models;
 using System.Text.Json;
+using _10xJournal.Client.Features.Authentication.Register.Models;
 
 namespace _10xJournal.Client.Features.Authentication.Register;
 
 /// <summary>
-/// Handles Supabase-backed authentication operations shared across authentication features.
+/// Handles user registration functionality.
 /// </summary>
-public sealed class SupabaseAuthService : IAuthService
+public sealed class RegisterHandler
 {
     private readonly Supabase.Client _supabaseClient;
-    private readonly ILogger<SupabaseAuthService> _logger;
+    private readonly ILogger<RegisterHandler> _logger;
 
-    public SupabaseAuthService(Supabase.Client supabaseClient, ILogger<SupabaseAuthService> logger)
+    public RegisterHandler(
+        Supabase.Client supabaseClient,
+        ILogger<RegisterHandler> logger)
     {
         _supabaseClient = supabaseClient;
         _logger = logger;
     }
 
+    /// <summary>
+    /// Registers a new user with email and password.
+    /// </summary>
+    /// <param name="email">User's email address</param>
+    /// <param name="password">User's password</param>
+    /// <returns>A task representing the registration operation</returns>
+    /// <exception cref="Supabase.Gotrue.Exceptions.GotrueException">Thrown when registration fails due to auth errors</exception>
+    /// <exception cref="InvalidOperationException">Thrown when registration fails for other reasons</exception>
     public async Task RegisterAsync(string email, string password)
     {
         try
@@ -58,39 +65,6 @@ public sealed class SupabaseAuthService : IAuthService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unexpected error occurred during registration for {Email}", email);
-            throw;
-        }
-    }
-
-    public async Task LoginAsync(string email, string password)
-    {
-        try
-        {
-            // Step 1: Sign in with Supabase Auth
-            var session = await _supabaseClient.Auth.SignIn(email, password);
-
-            if (session?.User == null || string.IsNullOrEmpty(session.User.Id))
-            {
-                _logger.LogError("SignIn succeeded but returned null user for {Email}", email);
-                throw new InvalidOperationException("Login failed - no user ID returned");
-            }
-
-            var userId = Guid.Parse(session.User.Id);
-            _logger.LogInformation("User {UserId} signed in, ensuring profile and streak records exist", userId);
-
-            // Step 2: Ensure user profile and streak records exist
-            // This is idempotent and handles cases where user was created outside normal registration flow
-            await EnsureUserInitializedAsync(userId);
-
-            _logger.LogInformation("Login completed successfully for user {UserId}", userId);
-        }
-        catch (Supabase.Gotrue.Exceptions.GotrueException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Unexpected error occurred during login for {Email}", email);
             throw;
         }
     }
