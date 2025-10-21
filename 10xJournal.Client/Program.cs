@@ -1,11 +1,10 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using _10xJournal.Client;
-using _10xJournal.Client.Features.Authentication.Models;
-using _10xJournal.Client.Features.Authentication.Register;
-using _10xJournal.Client.Features.Authentication.Services;
+using _10xJournal.Client.Features.Authentication.Login;
 using _10xJournal.Client.Features.Authentication.Logout;
 using _10xJournal.Client.Features.JournalEntries.WelcomeEntry;
+using _10xJournal.Client.Infrastructure.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
@@ -23,7 +22,8 @@ if (devUserOptions != null && devUserOptions.Enabled)
     builder.Services.AddSingleton(Options.Create(devUserOptions));
 }
 builder.Services.AddScoped<CurrentUserAccessor>();
-builder.Services.AddScoped<IAuthService, SupabaseAuthService>();
+builder.Services.AddScoped<_10xJournal.Client.Features.Authentication.Login.LoginHandler>();
+builder.Services.AddScoped<_10xJournal.Client.Features.Authentication.Register.RegisterHandler>();
 builder.Services.AddScoped<LogoutHandler>();
 builder.Services.AddScoped<WelcomeEntryService>();
 

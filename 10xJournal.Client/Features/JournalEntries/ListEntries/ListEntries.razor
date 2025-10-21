@@ -90,14 +90,7 @@
                 .Order(entry => entry.CreatedAt, Supabase.Postgrest.Constants.Ordering.Descending)
                 .Get();
 
-            if (response?.Models != null)
-            {
-                _entries = response.Models;
-            }
-            else
-            {
-                _entries = new List<JournalEntry>();
-            }
+            _entries = response?.Models ?? new List<JournalEntry>();
         }
         catch (Exception ex) when (ex.Message.Contains("401") || ex.Message.Contains("Unauthorized"))
         {
@@ -125,12 +118,13 @@
         try
         {
             var response = await SupabaseClient
-                .From<_10xJournal.Client.Features.JournalEntries.Models.UserStreak>()
+                .From<UserStreak>()
                 .Get();
 
-            if (response?.Models != null && response.Models.Count > 0)
+            var streak = response?.Models?.FirstOrDefault();
+            if (streak != null)
             {
-                _currentStreak = response.Models[0].CurrentStreak;
+                _currentStreak = streak.CurrentStreak;
             }
             else
             {
@@ -144,6 +138,7 @@
             _currentStreak = 0;
         }
     }
+
 
     private void NavigateToNewEntry()
     {

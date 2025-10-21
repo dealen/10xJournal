@@ -1,7 +1,7 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-namespace _10xJournal.Client.Features.JournalEntries.Models;
+namespace _10xJournal.Client.Features.JournalEntries.ListEntries;
 
 /// <summary>
 /// Represents user streak data tracking consecutive days with journal entries.

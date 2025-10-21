@@ -1,10 +1,7 @@
-using System;
-using System.Threading.Tasks;
-using _10xJournal.Client.Features.Authentication.Models;
-using Microsoft.Extensions.Logging;
+using _10xJournal.Client.Features.Authentication.Login;
 using Microsoft.Extensions.Options;
 
-namespace _10xJournal.Client.Features.Authentication.Services;
+namespace _10xJournal.Client.Infrastructure.Authentication;
 
 public sealed class CurrentUserAccessor
 {

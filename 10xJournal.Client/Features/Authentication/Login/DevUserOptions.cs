@@ -1,6 +1,6 @@
 using System;
 
-namespace _10xJournal.Client.Features.Authentication.Models;
+namespace _10xJournal.Client.Features.Authentication.Login;
 
 public sealed class DevUserOptions
 {

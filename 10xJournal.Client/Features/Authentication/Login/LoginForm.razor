@@ -1,8 +1,8 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Forms
-@using _10xJournal.Client.Features.Authentication.Services
-@using _10xJournal.Client.Features.Authentication.Register
-@inject IAuthService AuthService
+@using _10xJournal.Client.Infrastructure.ErrorHandling
+@using System.Text.Json
+@inject LoginHandler LoginHandler
 @inject ILogger<LoginForm> Logger
 
 <EditForm Model="loginModel" OnValidSubmit="HandleValidSubmit" aria-busy="@isBusy">
@@ -54,7 +54,7 @@
 
         try
         {
-            await AuthService.LoginAsync(loginModel.Email, loginModel.Password);
+            await LoginHandler.LoginAsync(loginModel.Email, loginModel.Password);
 
             if (OnLoginSuccess.HasDelegate)
             {
