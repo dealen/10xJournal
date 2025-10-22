@@ -249,4 +249,108 @@ public class JourneyE2ETests : IAsyncLifetime
         // Verify the entry is no longer in the list
         await Expect(_page.GetByText(uniqueEntryText)).Not.ToBeVisibleAsync();
     }
+
+    /// <summary>
+    /// Critical user journey #4: User can change their password and login with new credentials.
+    /// This E2E test verifies the complete password change flow including:
+    /// - Navigating to settings
+    /// - Changing password
+    /// - Logging out
+    /// - Logging back in with new password
+    /// </summary>
+    [Fact]
+    public async Task UserCanChangePasswordAndLoginWithNewCredentials()
+    {
+        var newPassword = "NewTestPassword456!";
+
+        try
+        {
+            // Go to the application
+            await _page.GotoAsync(_baseUrl);
+
+            // Click the login button
+            await _page.GetByRole(AriaRole.Button, new() { Name = "Zaloguj się" }).ClickAsync();
+
+            // Fill in login form with original password
+            await _page.GetByLabel("Adres e-mail").FillAsync(_testUsername);
+            await _page.GetByLabel("Hasło").FillAsync(_testPassword);
+            await _page.GetByRole(AriaRole.Button, new() { Name = "Zaloguj się" }).ClickAsync();
+
+            // Wait for login to complete
+            await _page.WaitForTimeoutAsync(2000);
+
+            // Expect to be redirected to the journal entries page
+            await Expect(_page).ToHaveURLAsync(new Regex(".*/app/journal"));
+
+            // Navigate to Settings page
+            // Look for Settings link in navigation or menu
+            await _page.GetByRole(AriaRole.Link, new() { Name = "Ustawienia" }).ClickAsync();
+
+            // Expect to be on Settings page
+            await Expect(_page).ToHaveURLAsync(new Regex(".*/app/settings"));
+
+            // Find the password change section
+            await Expect(_page.GetByText("Zmiana hasła")).ToBeVisibleAsync();
+
+            // Fill in the password change form
+            await _page.Locator("#current-password").FillAsync(_testPassword);
+            await _page.Locator("#new-password").FillAsync(newPassword);
+            await _page.Locator("#confirm-password").FillAsync(newPassword);
+
+            // Submit the password change form
+            await _page.GetByRole(AriaRole.Button, new() { Name = "Zmień hasło" }).ClickAsync();
+
+            // Wait for success message
+            await _page.WaitForTimeoutAsync(2000);
+            await Expect(_page.GetByText("Hasło zostało pomyślnie zmienione")).ToBeVisibleAsync();
+
+            // Logout
+            await _page.GetByRole(AriaRole.Button, new() { Name = "Wyloguj" }).ClickAsync();
+
+            // Wait for logout to complete
+            await _page.WaitForTimeoutAsync(1000);
+
+            // Click login button again
+            await _page.GetByRole(AriaRole.Button, new() { Name = "Zaloguj się" }).ClickAsync();
+
+            // Try to login with NEW password
+            await _page.GetByLabel("Adres e-mail").FillAsync(_testUsername);
+            await _page.GetByLabel("Hasło").FillAsync(newPassword);
+            await _page.GetByRole(AriaRole.Button, new() { Name = "Zaloguj się" }).ClickAsync();
+
+            // Wait for login
+            await _page.WaitForTimeoutAsync(2000);
+
+            // Assert - Should be logged in successfully with new password
+            await Expect(_page).ToHaveURLAsync(new Regex(".*/app/journal"));
+
+            // Verify we're actually logged in by checking for user-specific content
+            await Expect(_page.GetByRole(AriaRole.Button, new() { Name = "Nowy wpis" })).ToBeVisibleAsync();
+        }
+        finally
+        {
+            // IMPORTANT: Reset password back to original for future tests
+            try
+            {
+                // If test passed, we're logged in with new password
+                // Navigate back to settings and change password back
+                await _page.GotoAsync($"{_baseUrl}app/settings");
+                await _page.WaitForTimeoutAsync(1000);
+
+                await _page.Locator("#current-password").FillAsync(newPassword);
+                await _page.Locator("#new-password").FillAsync(_testPassword);
+                await _page.Locator("#confirm-password").FillAsync(_testPassword);
+
+                await _page.GetByRole(AriaRole.Button, new() { Name = "Zmień hasło" }).ClickAsync();
+                await _page.WaitForTimeoutAsync(2000);
+
+                Console.WriteLine("✅ Password reset back to original value");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️  Warning: Could not reset password back to original: {ex.Message}");
+                Console.WriteLine("⚠️  Manual password reset may be required for test user");
+            }
+        }
+    }
 }
