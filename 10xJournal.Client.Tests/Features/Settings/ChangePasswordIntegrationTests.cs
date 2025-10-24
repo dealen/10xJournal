@@ -1,4 +1,5 @@
 using _10xJournal.Client.Features.Settings.ChangePassword.Models;
+using _10xJournal.Client.Tests.Infrastructure.TestHelpers;
 using FluentAssertions;
 using Microsoft.Extensions.Configuration;
 using Supabase.Gotrue.Exceptions;
@@ -11,10 +12,12 @@ namespace _10xJournal.Client.Tests.Features.Settings;
 /// Tests password change flows against real Supabase test instance.
 /// Verifies authentication, error handling, and password update functionality.
 /// </summary>
+[Collection("SupabaseRateLimited")]
 public class ChangePasswordIntegrationTests : IAsyncLifetime
 {
     private Supabase.Client _supabaseClient = null!;
     private string _testUserEmail = string.Empty;
+    private Guid _testUserId;
     private const string InitialPassword = "TestPassword123!";
     private const string NewPassword = "NewPassword456!";
 
@@ -42,7 +45,11 @@ public class ChangePasswordIntegrationTests : IAsyncLifetime
 
         try
         {
-            await _supabaseClient.Auth.SignUp(_testUserEmail, InitialPassword);
+            var signUpResult = await _supabaseClient.Auth.SignUp(_testUserEmail, InitialPassword);
+            if (signUpResult?.User?.Id != null)
+            {
+                _testUserId = Guid.Parse(signUpResult.User.Id);
+            }
         }
         catch (Exception ex)
         {
@@ -59,6 +66,60 @@ public class ChangePasswordIntegrationTests : IAsyncLifetime
         catch
         {
             // Ignore cleanup errors
+        }
+
+        // Cleanup test user using service role
+        await CleanupTestUserAsync();
+    }
+
+    /// <summary>
+    /// Cleans up the test user created during initialization.
+    /// Uses admin client to delete user from auth.users table.
+    /// Cascade deletes will handle profiles, streaks, and journal entries.
+    /// </summary>
+    private async Task CleanupTestUserAsync()
+    {
+        if (_testUserId == Guid.Empty)
+        {
+            return; // No test user to clean up
+        }
+
+        try
+        {
+            var config = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.test.json")
+                .Build();
+
+            var serviceRoleKey = config["Supabase:ServiceRoleKey"];
+
+            if (string.IsNullOrEmpty(serviceRoleKey))
+            {
+                // Can't clean up without service role key
+                return;
+            }
+
+            var supabaseUrl = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
+            var adminOptions = new Supabase.SupabaseOptions
+            {
+                AutoRefreshToken = false,
+                AutoConnectRealtime = false
+            };
+
+            var adminClient = new Supabase.Client(supabaseUrl, serviceRoleKey, adminOptions);
+            await adminClient.InitializeAsync();
+
+            // Delete user using HTTP REST API to auth endpoint
+            using var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("apikey", serviceRoleKey);
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {serviceRoleKey}");
+
+            var deleteUrl = $"{supabaseUrl}/auth/v1/admin/users/{_testUserId}";
+            await httpClient.DeleteAsync(deleteUrl);
+        }
+        catch (Exception ex)
+        {
+            // Log cleanup failure but don't throw - we're in cleanup phase
+            Console.WriteLine($"Warning: Failed to cleanup test user: {ex.Message}");
         }
     }
 
