@@ -4,9 +4,9 @@
 
 Successfully implemented comprehensive test coverage for the Settings features following **Vertical Slice Architecture** and the project's **pragmatic testing strategy** (Integration > E2E > Unit).
 
-**Total Tests Created: 12**
+**Total Tests Created: 11**
 - Integration Tests: 11 tests across 3 features
-- E2E Tests: 1 comprehensive password change journey test
+- E2E Tests: 0 (planned for future implementation)
 
 ---
 
@@ -107,38 +107,6 @@ Successfully implemented comprehensive test coverage for the Settings features f
 
 ---
 
-### **4. PasswordChangeJourneyE2ETest** (1 test)
-
-**Location:** `/10xJournal.E2E.Tests/JourneyE2ETests.cs`
-
-**Test:**
-
-`UserCanChangePasswordAndLoginWithNewCredentials`
-
-**Purpose:** End-to-end verification of complete password change user journey
-
-**Flow Tested:**
-1. Login with original password
-2. Navigate to Settings page
-3. Fill password change form
-4. Submit password change
-5. Verify success message
-6. Logout
-7. Login with NEW password
-8. Verify successful login
-9. **Cleanup:** Reset password back to original (critical for test repeatability)
-
-**Priority:** 🔴 Critical (E2E verification)
-
-**Key Validation Points:**
-- Navigation flow works correctly
-- Form submission and validation
-- Success feedback to user
-- Authentication with new credentials
-- Test cleanup for repeatability
-
----
-
 ## 🎯 **Testing Strategy Applied**
 
 ### **Quality Over Quantity**
@@ -175,7 +143,7 @@ Successfully implemented comprehensive test coverage for the Settings features f
 
 2. **Blazor component rendering** (`.razor` files)
    - **Reason:** Framework-specific rendering logic
-   - **Coverage:** E2E test covers UI interaction
+   - **Coverage:** E2E tests planned for future implementation
 
 3. **Validation attributes** (`[Required]`, `[MinLength]`, etc.)
    - **Reason:** Framework-provided functionality
@@ -198,12 +166,6 @@ dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj --filter "Ful
 dotnet test --filter "FullyQualifiedName~ChangePasswordIntegrationTests"
 dotnet test --filter "FullyQualifiedName~ExportDataIntegrationTests"
 dotnet test --filter "FullyQualifiedName~DeleteAccountIntegrationTests"
-```
-
-### **E2E Test:**
-```bash
-# Run the password change journey E2E test
-dotnet test 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj --filter "UserCanChangePasswordAndLoginWithNewCredentials"
 ```
 
 ### **All Tests:**
@@ -232,10 +194,6 @@ dotnet test
    - `delete_my_account` RPC function
    - RLS policies on `journal_entries` table
 
-3. **Test User for E2E:**
-   - Email: `e2etest@testmail.com`
-   - Password: `TestPassword123!`
-
 ---
 
 ## ✨ **Key Quality Features**
@@ -255,10 +213,10 @@ dotnet test
 - Clear console messages about configuration issues
 - CI/CD friendly
 
-### **4. E2E Test Cleanup**
-- Password change E2E test resets password after completion
-- Ensures test repeatability
-- Prevents test environment pollution
+### **4. Sequential Execution**
+- Tests use `SupabaseRateLimitedCollection` to run sequentially
+- Prevents rate limiting issues
+- More reliable test execution
 
 ### **5. Clear Documentation**
 - Every test has XML doc comments explaining purpose
@@ -272,7 +230,7 @@ dotnet test
 ### **What Worked Well:**
 1. **Integration-first approach** provided high confidence with minimal complexity
 2. **RLS verification in integration tests** ensures security policies work
-3. **Single E2E test** covers critical user journey without over-testing UI
+3. **Sequential execution** eliminates rate limiting issues
 4. **Test skipping** when environment not configured allows local development
 5. **Vertical slice organization** makes tests easy to find and maintain
 
@@ -289,16 +247,26 @@ dotnet test
 
 | Feature | Integration Tests | E2E Tests | Critical Scenarios Covered |
 |---------|------------------|-----------|---------------------------|
-| ChangePassword | 4 | 1 | ✅ Password update, security validation, authentication |
+| ChangePassword | 4 | - | ✅ Password update, security validation, authentication |
 | ExportData | 3 | - | ✅ RLS policies, data format, empty states |
 | DeleteAccount | 4 | - | ✅ Complete deletion, RLS policies, multi-step flow |
-| **Total** | **11** | **1** | **12 tests** |
+| **Total** | **11** | **0** | **11 tests** |
+
+---
+
+## 🔄 **Future Work**
+
+### **E2E Test Implementation** (Planned)
+- **JourneyE2ETests.cs**: End-to-end password change journey test
+- **Framework**: Playwright for browser automation
+- **Coverage**: Complete user journey from UI to database
+- **Status**: Planned for future implementation
 
 ---
 
 ## ✅ **Status: Complete**
 
-All Settings feature tests have been successfully implemented following the project's testing strategy and architectural principles. Tests compile without errors and warnings, following C# coding conventions and best practices.
+All planned Settings feature integration tests have been successfully implemented following the project's testing strategy and architectural principles. Tests compile without errors and warnings, following C# coding conventions and best practices.
 
 **Build Status:** ✅ Success (0 errors, 0 warnings)
 **Architecture Compliance:** ✅ Vertical Slice Architecture
@@ -308,5 +276,6 @@ All Settings feature tests have been successfully implemented following the proj
 ---
 
 **Created:** October 22, 2025
+**Updated:** October 24, 2025
 **Author:** GitHub Copilot
 **Project:** 10xJournal
