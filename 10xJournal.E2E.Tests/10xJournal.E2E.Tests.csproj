@@ -6,8 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <OutputType>Exe</OutputType>
-    <StartupObject>_10xJournal.E2E.Tests.TestUserSetup</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
