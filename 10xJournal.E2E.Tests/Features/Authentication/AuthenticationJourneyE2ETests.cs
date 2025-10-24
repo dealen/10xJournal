@@ -102,7 +102,12 @@ public class AuthenticationJourneyE2ETests : E2ETestBase
         await Page.Locator("button[type='submit']").ClickAsync();
         await Page.WaitForURLAsync(new Regex(".*/app/journal|.*/registration-success"), new() { Timeout = 15000 });
 
-        // Logout - use JavaScript click to bypass viewport restrictions
+        // Logout - use JavaScript click to bypass viewport restrictions.
+        // IMPORTANT: Do NOT refactor this to use Playwright's ClickAsync().
+        // The standard ClickAsync() method fails in some cases because the logout button may be outside the viewport,
+        // covered by other elements, or otherwise unclickable via Playwright's normal method.
+        // This direct JavaScript click ensures the logout action is triggered regardless of UI state.
+        // Future maintainers: Only change this if you fully understand the reason for this workaround.
         var logoutButton = Page.Locator("button:has-text('Logout'), a:has-text('Logout'), button:has-text('Wyloguj')").First;
         await logoutButton.EvaluateAsync("element => element.click()");
         await Page.WaitForURLAsync(new Regex(".*/login|/$"), new() { Timeout = 10000 });
