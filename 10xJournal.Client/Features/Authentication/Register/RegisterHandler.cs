@@ -1,5 +1,6 @@
 using System.Text.Json;
 using _10xJournal.Client.Features.Authentication.Register.Models;
+using _10xJournal.Client.Features.JournalEntries.WelcomeEntry;
 
 namespace _10xJournal.Client.Features.Authentication.Register;
 
@@ -10,13 +11,16 @@ public sealed class RegisterHandler
 {
     private readonly Supabase.Client _supabaseClient;
     private readonly ILogger<RegisterHandler> _logger;
+    private readonly WelcomeEntryService _welcomeEntryService;
 
     public RegisterHandler(
         Supabase.Client supabaseClient,
-        ILogger<RegisterHandler> logger)
+        ILogger<RegisterHandler> logger,
+        WelcomeEntryService welcomeEntryService)
     {
         _supabaseClient = supabaseClient;
         _logger = logger;
+        _welcomeEntryService = welcomeEntryService;
     }
 
     /// <summary>
@@ -52,6 +56,9 @@ public sealed class RegisterHandler
             {
                 await _supabaseClient.Auth.SetSession(session.AccessToken, session.RefreshToken);
                 _logger.LogInformation("Session established for user {UserId}", userId);
+                
+                // Step 4: Create welcome entry for the new user
+                await _welcomeEntryService.CreateWelcomeEntryIfNeededAsync();
             }
             else
             {

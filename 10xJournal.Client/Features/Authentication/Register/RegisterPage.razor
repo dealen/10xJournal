@@ -2,6 +2,8 @@
 @using Microsoft.AspNetCore.Components.Web
 @using _10xJournal.Client.Features.Authentication.Register
 @inject NavigationManager Navigation
+@inject Supabase.Client SupabaseClient
+@inject ILogger<RegisterPage> Logger
 
 <PageTitle>Rejestracja - 10xJournal</PageTitle>
 
@@ -20,8 +22,28 @@
 </main>
 
 @code {
-    private void HandleRegisterSuccess()
+    private async Task HandleRegisterSuccess()
     {
-        Navigation.NavigateTo("/registration-success");
+        // Check if user was auto-logged in (email confirmation disabled)
+        // If session exists, redirect to app. Otherwise, show confirmation message.
+        var session = SupabaseClient.Auth.CurrentSession;
+        
+        Logger.LogInformation("HandleRegisterSuccess called. Session exists: {HasSession}, User: {User}", 
+            session != null, session?.User?.Email ?? "null");
+        
+        if (session?.User != null)
+        {
+            // User is authenticated - redirect to app
+            Logger.LogInformation("Redirecting authenticated user to /app/journal");
+            Navigation.NavigateTo("/app/journal", forceLoad: false);
+        }
+        else
+        {
+            // Email confirmation required - show success message
+            Logger.LogInformation("No session found, redirecting to /registration-success");
+            Navigation.NavigateTo("/registration-success", forceLoad: false);
+        }
+        
+        await Task.CompletedTask;
     }
 }

@@ -1,4 +1,5 @@
 using _10xJournal.Client.Features.Authentication.Register;
+using _10xJournal.Client.Features.JournalEntries.WelcomeEntry;
 using _10xJournal.Client.Shared.Models;
 using _10xJournal.Client.Tests.Infrastructure.TestHelpers;
 using Microsoft.Extensions.Configuration;
@@ -49,7 +50,7 @@ public class RegisterIntegrationTests : IAsyncLifetime
 
         _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
         _logger = SupabaseTestHelper.CreateTestLogger<RegisterHandler>();
-        _registerHandler = new RegisterHandler(_supabaseClient, _logger);
+        _registerHandler = new RegisterHandler(_supabaseClient, _logger, new WelcomeEntryService(_supabaseClient, SupabaseTestHelper.CreateTestLogger<WelcomeEntryService>()));
 
         // Verify database functions exist (provides helpful error messages if migrations missing)
         try
