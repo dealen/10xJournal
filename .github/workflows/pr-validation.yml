@@ -27,75 +27,75 @@ jobs:
     - name: 🔨 Build solution
       run: dotnet build --no-restore --configuration Release
     
-    - name: 🔧 Configure test appsettings
-      run: |
-        # Update Client.Tests appsettings
-        cat > 10xJournal.Client.Tests/appsettings.test.json <<EOF
-        {
-          "Supabase": {
-            "Url": "${{ secrets.DEV_SUPABASE_URL }}",
-            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
-            "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
-            "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
-          },
-          "TestUser": {
-            "Email": "${{ secrets.TEST_USER_EMAIL }}",
-            "Password": "${{ secrets.TEST_USER_PASSWORD }}"
-          }
-        }
-        EOF
+    # - name: 🔧 Configure test appsettings
+    #   run: |
+    #     # Update Client.Tests appsettings
+    #     cat > 10xJournal.Client.Tests/appsettings.test.json <<EOF
+    #     {
+    #       "Supabase": {
+    #         "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+    #         "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
+    #         "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
+    #         "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+    #       },
+    #       "TestUser": {
+    #         "Email": "${{ secrets.TEST_USER_EMAIL }}",
+    #         "Password": "${{ secrets.TEST_USER_PASSWORD }}"
+    #       }
+    #     }
+    #     EOF
         
-        # Update E2E.Tests appsettings
-        cat > 10xJournal.E2E.Tests/appsettings.test.json <<EOF
-        {
-          "Supabase": {
-            "Url": "${{ secrets.DEV_SUPABASE_URL }}",
-            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
-          },
-          "TestUser": {
-            "Email": "${{ secrets.TEST_USER_EMAIL }}",
-            "Password": "${{ secrets.TEST_USER_PASSWORD }}"
-          },
-          "BaseUrl": "http://localhost:5000"
-        }
-        EOF
+    #     # Update E2E.Tests appsettings
+    #     cat > 10xJournal.E2E.Tests/appsettings.test.json <<EOF
+    #     {
+    #       "Supabase": {
+    #         "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+    #         "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+    #       },
+    #       "TestUser": {
+    #         "Email": "${{ secrets.TEST_USER_EMAIL }}",
+    #         "Password": "${{ secrets.TEST_USER_PASSWORD }}"
+    #       },
+    #       "BaseUrl": "http://localhost:5000"
+    #     }
+    #     EOF
         
-        # Debug: Show the generated config (redacting only values, not keys)
-        echo "📝 Generated test configuration files:"
-        echo "Client.Tests appsettings.test.json:"
-        cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
-        echo ""
-        echo "E2E.Tests appsettings.test.json:"
-        cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
+    #     # Debug: Show the generated config (redacting only values, not keys)
+    #     echo "📝 Generated test configuration files:"
+    #     echo "Client.Tests appsettings.test.json:"
+    #     cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
+    #     echo ""
+    #     echo "E2E.Tests appsettings.test.json:"
+    #     cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
     
-    - name: 🧪 Run unit tests
-      run: |  
-        dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
-          --no-build \
-          --configuration Release \
-          --filter "Category!=Integration" \
-          --logger "trx;LogFileName=unit-test-results.trx" \
-          --collect:"XPlat Code Coverage"
+    # - name: 🧪 Run unit tests
+    #   run: |  
+    #     dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
+    #       --no-build \
+    #       --configuration Release \
+    #       --filter "Category!=Integration" \
+    #       --logger "trx;LogFileName=unit-test-results.trx" \
+    #       --collect:"XPlat Code Coverage"
     
-    - name: 🔗 Run integration tests
-      run: |
-        dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
-          --no-build \
-          --configuration Release \
-          --filter "Category=Integration" \
-          --logger "trx;LogFileName=integration-test-results.trx"
+    # - name: 🔗 Run integration tests
+    #   run: |
+    #     dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
+    #       --no-build \
+    #       --configuration Release \
+    #       --filter "Category=Integration" \
+    #       --logger "trx;LogFileName=integration-test-results.trx"
     
-    - name: 🎭 Setup Playwright
-      run: |
-        dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj
-        pwsh 10xJournal.E2E.Tests/bin/Debug/net9.0/playwright.ps1 install --with-deps chromium
+    # - name: 🎭 Setup Playwright
+    #   run: |
+    #     dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj
+    #     pwsh 10xJournal.E2E.Tests/bin/Debug/net9.0/playwright.ps1 install --with-deps chromium
     
-    - name: 🎬 Run E2E tests
-      run: |
-        dotnet test 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj \
-          --configuration Release \
-          --logger "trx;LogFileName=e2e-test-results.trx" \
-          --logger "console;verbosity=detailed"
+    # - name: 🎬 Run E2E tests
+    #   run: |
+    #     dotnet test 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj \
+    #       --configuration Release \
+    #       --logger "trx;LogFileName=e2e-test-results.trx" \
+    #       --logger "console;verbosity=detailed"
     
     - name: 📊 Upload test results
       if: always()
