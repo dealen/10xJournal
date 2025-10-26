@@ -1,0 +1,80 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: 'Reason for manual deployment'
+        required: false
+        default: 'Manual deployment'
+
+env:
+  DOTNET_VERSION: '9.0.x'
+
+jobs:
+  deploy:
+    name: Deploy to Azure Static Web Apps
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+    
+    - name: ⚙️ Setup .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: 🔨 Build and publish
+      run: |
+        dotnet publish 10xJournal.Client/10xJournal.Client.csproj \
+          -c Release \
+          -o ./publish
+    
+    - name: 🔧 Update appsettings for production
+      run: |
+        cat > ./publish/wwwroot/appsettings.json <<EOF
+        {
+          "Supabase": {
+            "Url": "${{ secrets.PROD_SUPABASE_URL }}",
+            "AnonKey": "${{ secrets.PROD_SUPABASE_ANON_KEY }}"
+          }
+        }
+        EOF
+    
+    - name: 🚀 Deploy to Azure Static Web Apps
+      id: deploy
+      uses: Azure/static-web-apps-deploy@v1
+      with:
+        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        action: "upload"
+        app_location: "./publish/wwwroot"
+        skip_app_build: true
+    
+    - name: ✅ Create deployment summary
+      if: success()
+      run: |
+        echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Environment**: Production" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Time**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "${{ github.event.inputs.reason }}" != "" ]; then
+          echo "**Reason**: ${{ github.event.inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+        fi
+    
+    - name: ❌ Deployment failed
+      if: failure()
+      run: |
+        echo "## ❌ Deployment Failed" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Check the logs above for details." >> $GITHUB_STEP_SUMMARY
+        echo "You may need to rollback manually in Azure Portal." >> $GITHUB_STEP_SUMMARY
