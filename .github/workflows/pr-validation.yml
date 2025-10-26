@@ -28,7 +28,13 @@ jobs:
       run: dotnet build --no-restore --configuration Release
     
     - name: 🧪 Run unit tests
-      run: |
+      env:
+        SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+        SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+      run: |  
         dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
           --no-build \
           --configuration Release \
@@ -40,6 +46,9 @@ jobs:
       env:
         SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
       run: |
         dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
           --no-build \
@@ -56,6 +65,8 @@ jobs:
       env:
         SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
         SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
       run: |
         dotnet test 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj \
           --configuration Release \
