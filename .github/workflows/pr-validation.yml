@@ -57,6 +57,14 @@ jobs:
           "BaseUrl": "http://localhost:5000"
         }
         EOF
+        
+        # Debug: Show the generated config (without sensitive data)
+        echo "📝 Generated test configuration files:"
+        echo "Client.Tests appsettings.test.json:"
+        cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/"[^"]*supabase[^"]*"/"***REDACTED***"/gi' | sed 's/"Password": "[^"]*"/"Password": "***REDACTED***"/g'
+        echo ""
+        echo "E2E.Tests appsettings.test.json:"
+        cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/"[^"]*supabase[^"]*"/"***REDACTED***"/gi' | sed 's/"Password": "[^"]*"/"Password": "***REDACTED***"/g'
     
     - name: 🧪 Run unit tests
       run: |  
