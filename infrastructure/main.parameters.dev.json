@@ -1,0 +1,32 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "westeurope"
+    },
+    "repositoryUrl": {
+      "value": "https://github.com/dealen/10xJournal"
+    },
+    "repositoryBranch": {
+      "value": "develop"
+    },
+    "repositoryToken": {
+      "value": ""
+    },
+    "sku": {
+      "value": "Free"
+    },
+    "tags": {
+      "value": {
+        "Project": "10xJournal",
+        "Environment": "dev",
+        "ManagedBy": "Bicep",
+        "Owner": "Jakub Marcickiewicz"
+      }
+    }
+  }
+}

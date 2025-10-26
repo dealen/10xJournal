@@ -1,0 +1,12 @@
+# Deployment tokens (sensitive)
+.deployment-token.txt
+deployment_output.json
+
+# Backup parameters with secrets
+*.parameters.local.json
+
+# Azure deployment logs
+*.log
+
+# Cleanup exports
+cleanup-resources-*.json
