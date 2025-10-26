@@ -33,6 +33,8 @@ jobs:
         cat > 10xJournal.Client.Tests/appsettings.test.json <<EOF
         {
           "Supabase": {
+            "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
             "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
             "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
           },
@@ -58,13 +60,13 @@ jobs:
         }
         EOF
         
-        # Debug: Show the generated config (without sensitive data)
+        # Debug: Show the generated config (redacting only values, not keys)
         echo "📝 Generated test configuration files:"
         echo "Client.Tests appsettings.test.json:"
-        cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/"[^"]*supabase[^"]*"/"***REDACTED***"/gi' | sed 's/"Password": "[^"]*"/"Password": "***REDACTED***"/g'
+        cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
         echo ""
         echo "E2E.Tests appsettings.test.json:"
-        cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/"[^"]*supabase[^"]*"/"***REDACTED***"/gi' | sed 's/"Password": "[^"]*"/"Password": "***REDACTED***"/g'
+        cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
     
     - name: 🧪 Run unit tests
       run: |  
