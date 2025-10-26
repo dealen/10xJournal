@@ -27,13 +27,38 @@ jobs:
     - name: 🔨 Build solution
       run: dotnet build --no-restore --configuration Release
     
+    - name: 🔧 Configure test appsettings
+      run: |
+        # Update Client.Tests appsettings
+        cat > 10xJournal.Client.Tests/appsettings.test.json <<EOF
+        {
+          "Supabase": {
+            "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
+            "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+          },
+          "TestUser": {
+            "Email": "${{ secrets.TEST_USER_EMAIL }}",
+            "Password": "${{ secrets.TEST_USER_PASSWORD }}"
+          }
+        }
+        EOF
+        
+        # Update E2E.Tests appsettings
+        cat > 10xJournal.E2E.Tests/appsettings.test.json <<EOF
+        {
+          "Supabase": {
+            "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+          },
+          "TestUser": {
+            "Email": "${{ secrets.TEST_USER_EMAIL }}",
+            "Password": "${{ secrets.TEST_USER_PASSWORD }}"
+          },
+          "BaseUrl": "http://localhost:5000"
+        }
+        EOF
+    
     - name: 🧪 Run unit tests
-      env:
-        SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-        SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
       run: |  
         dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
           --no-build \
@@ -43,12 +68,6 @@ jobs:
           --collect:"XPlat Code Coverage"
     
     - name: 🔗 Run integration tests
-      env:
-        SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-        SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
-        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
       run: |
         dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
           --no-build \
@@ -62,11 +81,6 @@ jobs:
         pwsh 10xJournal.E2E.Tests/bin/Debug/net9.0/playwright.ps1 install --with-deps chromium
     
     - name: 🎬 Run E2E tests
-      env:
-        SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
-        SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
-        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
-        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
       run: |
         dotnet test 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj \
           --configuration Release \
