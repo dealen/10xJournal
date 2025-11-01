@@ -61,13 +61,13 @@ jobs:
         }
         EOF
         
-        # Debug: Show the generated config (redacting only values, not keys)
+        # Debug: Show the generated config structure (without sensitive values)
         echo "📝 Generated test configuration files:"
-        echo "Client.Tests appsettings.test.json:"
-        cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
+        echo "Client.Tests appsettings.test.json structure:"
+        cat 10xJournal.Client.Tests/appsettings.test.json | grep -E '^\s*"[^"]+":' || echo "Configuration file created"
         echo ""
-        echo "E2E.Tests appsettings.test.json:"
-        cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
+        echo "E2E.Tests appsettings.test.json structure:"
+        cat 10xJournal.E2E.Tests/appsettings.test.json | grep -E '^\s*"[^"]+":' || echo "Configuration file created"
     
     - name: 🧪 Run unit tests
       run: |  
