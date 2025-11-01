@@ -50,6 +50,9 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
                 AutoConnectRealtime = false
             };
 
+            Console.WriteLine("Initializing Supabase client for tests...");
+            Console.WriteLine($"Supabase URL: {supabaseUrl}");
+
             _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
         }
         catch (Exception ex)
