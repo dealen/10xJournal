@@ -112,7 +112,7 @@ jobs:
           echo "::error::Supabase:TestUrl is missing or empty in 10xJournal.Client.Tests/appsettings.test.json"
           exit 1
         fi
-        TRIMMED=$(echo -n "$URL" | sed 's/^\s*//;s/\s*$//;s/^\"//;s/\"$//;s/^\'\''//;s/\'\'$//')
+        TRIMMED=$(echo -n "$URL" | sed -e "s/^[[:space:]]*'//" -e "s/'[[:space:]]*$//" -e 's/^[[:space:]]*"//' -e 's/"[[:space:]]*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         LEN=${#TRIMMED}
         STARTS_WITH_HTTPS=false; [[ "$TRIMMED" == https://* ]] && STARTS_WITH_HTTPS=true
         HAS_SPACE=false; [[ "$TRIMMED" == *" "* ]] && HAS_SPACE=true
