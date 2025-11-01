@@ -1,0 +1,48 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/css/*",
+      "/js/*",
+      "/*.{png,jpg,jpeg,gif,svg,ico,webp}",
+      "/manifest.json",
+      "/service-worker.js",
+      "/appsettings*.json"
+    ]
+  },
+  "routes": [
+    {
+      "route": "/login",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/register",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/app/*",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/reset-password",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/update-password",
+      "rewrite": "/index.html"
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
+  "mimeTypes": {
+    ".json": "application/json",
+    ".wasm": "application/wasm"
+  },
+  "globalHeaders": {
+    "cache-control": "no-cache, no-store, must-revalidate"
+  }
+}
