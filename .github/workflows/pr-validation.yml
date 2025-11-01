@@ -104,7 +104,15 @@ jobs:
         echo "E2E.Tests appsettings.test.json structure:"
         cat 10xJournal.E2E.Tests/appsettings.test.json | grep -E '^\s*"[^"]+":' || echo "Configuration file created"
 
-    - name: 🔍 Validate Supabase URL format
+    - name: � Copy updated configs to build output
+      run: |
+        # Copy updated appsettings to the build output directories
+        # This ensures tests run with --no-build use the updated configuration
+        cp 10xJournal.Client.Tests/appsettings.test.json 10xJournal.Client.Tests/bin/Release/net9.0/
+        cp 10xJournal.E2E.Tests/appsettings.test.json 10xJournal.E2E.Tests/bin/Release/net9.0/
+        echo "✅ Updated configuration files copied to build output directories"
+
+    - name: �🔍 Validate Supabase URL format
       run: |
         # Extract the TestUrl using jq. The -r flag gives the raw string value.
         URL=$(jq -r '.Supabase.TestUrl' 10xJournal.Client.Tests/appsettings.test.json)
