@@ -201,6 +201,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             // Skip if test environment not configured
             return;
         }
@@ -276,6 +278,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             return;
         }
     }
@@ -314,6 +318,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             return;
         }
     }
@@ -368,6 +374,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             return;
         }
     }
