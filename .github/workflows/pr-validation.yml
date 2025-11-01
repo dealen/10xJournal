@@ -88,8 +88,8 @@ jobs:
     
     - name: 🎭 Setup Playwright
       run: |
-        dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj
-        pwsh 10xJournal.E2E.Tests/bin/Debug/net9.0/playwright.ps1 install --with-deps chromium
+        dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj --configuration Release
+        pwsh 10xJournal.E2E.Tests/bin/Release/net9.0/playwright.ps1 install --with-deps chromium
     
     - name: 🎬 Run E2E tests
       run: |
