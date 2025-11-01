@@ -23,6 +23,7 @@ public class AuthUser : Supabase.Postgrest.Models.BaseModel
 /// Verifies critical security, data integrity, and user experience requirements.
 /// </summary>
 [Collection("SupabaseRateLimited")]
+[Trait("Category", "Integration")]
 public class RegisterIntegrationTests : IAsyncLifetime
 {
     private Supabase.Client _supabaseClient = null!;
