@@ -38,8 +38,8 @@ public class LogoutHandler
 
             _logger.LogInformation("User logged out successfully");
 
-            // Redirect to login page
-            _navigationManager.NavigateTo("/login", forceLoad: true);
+            // Redirect to login page using SPA navigation (seamless, no reload)
+            _navigationManager.NavigateTo("/login", forceLoad: false);
         }
         catch (Exception ex)
         {
@@ -47,7 +47,7 @@ public class LogoutHandler
             
             // Even if logout fails on server, clear client state and redirect
             // This ensures user can't remain in a half-logged-out state
-            _navigationManager.NavigateTo("/login", forceLoad: true);
+            _navigationManager.NavigateTo("/login", forceLoad: false);
         }
     }
 }

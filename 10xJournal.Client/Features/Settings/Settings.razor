@@ -8,7 +8,7 @@
 
 <PageTitle>Ustawienia - 10xJournal</PageTitle>
 
-<div class="settings-container" style="margin: 1rem;">
+<div class="settings-container" style="margin: 5rem 1rem 1rem 1rem;">
     <h1>Ustawienia konta</h1>
 
     @if (!string.IsNullOrWhiteSpace(globalSuccessMessage))
@@ -63,7 +63,7 @@
         {
             await SupabaseClient.Auth.SignOut();
             Logger.LogInformation("User successfully logged out");
-            NavigationManager.NavigateTo("/", forceLoad: true);
+            NavigationManager.NavigateTo("/login", forceLoad: false);
         }
         catch (Exception ex)
         {
@@ -107,14 +107,14 @@
             // Sign out user
             await SupabaseClient.Auth.SignOut();
 
-            // Redirect to home page with forced reload
-            NavigationManager.NavigateTo("/", forceLoad: true);
+            // Redirect to login page using SPA navigation
+            NavigationManager.NavigateTo("/login", forceLoad: false);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error during post-deletion logout");
             // In case of logout error, still redirect user
-            NavigationManager.NavigateTo("/", forceLoad: true);
+            NavigationManager.NavigateTo("/login", forceLoad: false);
         }
     }
 }
