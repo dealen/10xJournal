@@ -13,6 +13,7 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
 {
     private const string SESSION_KEY = "supabase.auth.token";
     private readonly IJSRuntime _jsRuntime;
+    private Session? _cachedSession;
 
     public BlazorSessionPersistence(IJSRuntime jsRuntime)
     {
@@ -21,44 +22,53 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
 
     /// <summary>
     /// Saves the session to browser localStorage.
+    /// Note: This is a synchronous interface method, but we use fire-and-forget async call.
+    /// The session is also cached in memory for immediate retrieval.
     /// </summary>
     public void SaveSession(Session session)
     {
         try
         {
+            // Cache the session in memory for immediate access
+            _cachedSession = session;
+            
             var json = JsonSerializer.Serialize(session);
-            // Note: This is a synchronous call wrapped in a void async method
-            _ = _jsRuntime.InvokeVoidAsync("localStorage.setItem", SESSION_KEY, json);
+            
+            // Fire-and-forget async call to save to localStorage
+            // We can't await here due to the interface contract
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", SESSION_KEY, json);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to save session to localStorage: {ex.Message}");
+                }
+            });
         }
         catch (Exception ex)
         {
-            // Session save failed - log but don't throw
             Console.WriteLine($"Failed to save session: {ex.Message}");
         }
     }
 
     /// <summary>
     /// Loads the session from browser localStorage.
+    /// Returns cached session if available, otherwise returns null.
+    /// The Supabase client will call InitializeAsync which uses LoadSessionAsync.
     /// </summary>
     public Session? LoadSession()
     {
-        try
-        {
-            // This is problematic in Blazor WASM - LoadSession is called synchronously
-            // but we need async to access localStorage
-            // We'll return null here and rely on InitializeAsync to load the session
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to load session: {ex.Message}");
-            return null;
-        }
+        // Return cached session if available
+        // The actual loading from localStorage happens in InitializeAsync
+        return _cachedSession;
     }
 
     /// <summary>
     /// Loads the session asynchronously from browser localStorage.
-    /// This is the proper way to load sessions in Blazor WASM.
+    /// This is called by Supabase.InitializeAsync() to restore the session on app startup.
     /// </summary>
     public async Task<Session?> LoadSessionAsync()
     {
@@ -70,7 +80,12 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
                 return null;
             }
 
-            return JsonSerializer.Deserialize<Session>(json);
+            var session = JsonSerializer.Deserialize<Session>(json);
+            
+            // Cache the loaded session for synchronous access
+            _cachedSession = session;
+            
+            return session;
         }
         catch (Exception ex)
         {
@@ -80,13 +95,27 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
     }
 
     /// <summary>
-    /// Destroys the session by removing it from browser localStorage.
+    /// Destroys the session by removing it from browser localStorage and memory cache.
     /// </summary>
     public void DestroySession()
     {
         try
         {
-            _ = _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SESSION_KEY);
+            // Clear the memory cache
+            _cachedSession = null;
+            
+            // Fire-and-forget async call to remove from localStorage
+            Task.Run(async () =>
+            {
+                try
+                {
+                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SESSION_KEY);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to destroy session in localStorage: {ex.Message}");
+                }
+            });
         }
         catch (Exception ex)
         {

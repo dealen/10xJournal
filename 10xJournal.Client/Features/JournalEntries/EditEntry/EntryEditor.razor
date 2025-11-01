@@ -25,13 +25,21 @@
     }
     else
     {
+        <SaveStatusIndicator Status="_saveStatus" LastSavedAt="_lastSavedAt" />
+
         <header class="editor-header">
             <button class="back-button" @onclick="NavigateToList" aria-label="Back to entries">
                 <span aria-hidden="true">←</span>
                 <span>Back</span>
             </button>
 
-            <SaveStatusIndicator Status="_saveStatus" LastSavedAt="_lastSavedAt" />
+            <div class="character-counter">
+                <span class="character-count">@GetCharacterCount() characters</span>
+                @if (GetWordCount() > 0)
+                {
+                    <span class="word-count">@GetWordCount() words</span>
+                }
+            </div>
 
             @if (_entryId.HasValue)
             {
@@ -40,15 +48,11 @@
                     <span>Delete</span>
                 </button>
             }
-        </header>
-
-        <div class="character-counter">
-            <span class="character-count">@GetCharacterCount() characters</span>
-            @if (GetWordCount() > 0)
+            else
             {
-                <span class="word-count">@GetWordCount() words</span>
+                <div class="delete-button-placeholder"></div>
             }
-        </div>
+        </header>
 
         <main class="editor-main">
             <textarea 
