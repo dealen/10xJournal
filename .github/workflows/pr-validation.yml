@@ -164,6 +164,47 @@ jobs:
         dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj --configuration Release
         pwsh 10xJournal.E2E.Tests/bin/Release/net9.0/playwright.ps1 install --with-deps chromium
     
+    - name: � Configure Blazor app for E2E tests
+      run: |
+        # Update the Blazor app's appsettings.json with test Supabase credentials
+        cat > 10xJournal.Client/bin/Release/net9.0/wwwroot/appsettings.json <<EOF
+        {
+          "Supabase": {
+            "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+          },
+          "DevUser": {
+            "Enabled": false,
+            "UserId": "",
+            "Email": ""
+          }
+        }
+        EOF
+        echo "✅ Blazor app configured for E2E tests"
+    
+    - name: �🚀 Start Blazor WASM app
+      run: |
+        # Start the Blazor WASM app in the background
+        cd 10xJournal.Client
+        dotnet run --no-build --configuration Release --urls "http://localhost:5212" &
+        
+        # Wait for the app to be ready (max 60 seconds)
+        echo "Waiting for Blazor app to start..."
+        for i in {1..60}; do
+          if curl -s http://localhost:5212 > /dev/null; then
+            echo "✅ Blazor app is ready!"
+            break
+          fi
+          echo "Waiting... ($i/60)"
+          sleep 1
+        done
+        
+        # Verify the app is running
+        if ! curl -s http://localhost:5212 > /dev/null; then
+          echo "❌ Failed to start Blazor app"
+          exit 1
+        fi
+    
     - name: 🎬 Run E2E tests
       run: |
         dotnet test 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj \
@@ -171,7 +212,13 @@ jobs:
           --logger "trx;LogFileName=e2e-test-results.trx" \
           --logger "console;verbosity=detailed"
     
-    - name: 📊 Upload test results
+    - name: � Stop Blazor WASM app
+      if: always()
+      run: |
+        # Kill the background dotnet process running the Blazor app
+        pkill -f "dotnet.*10xJournal.Client" || echo "No Blazor app process found"
+    
+    - name: �📊 Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
