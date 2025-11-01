@@ -12,11 +12,45 @@ jobs:
     name: Build and Test
     runs-on: ubuntu-latest
     environment: test
+    env:
+      DEV_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+      DEV_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+      DEV_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
     
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
     
+    - name: 🔐 Validate required secrets
+      run: |
+        missing=false
+
+        check_secret() {
+          local name="$1"
+          local value="$2"
+          if [ -z "$value" ]; then
+            echo "::error::Missing required secret: $name"
+            missing=true
+          fi
+        }
+
+        check_secret "DEV_SUPABASE_URL" "$DEV_SUPABASE_URL"
+        check_secret "DEV_SUPABASE_ANON_KEY" "$DEV_SUPABASE_ANON_KEY"
+        check_secret "TEST_USER_EMAIL" "$TEST_USER_EMAIL"
+        check_secret "TEST_USER_PASSWORD" "$TEST_USER_PASSWORD"
+
+        # Service role key is optional but we warn if absent to protect cleanup steps
+        if [ -z "$DEV_SUPABASE_SERVICE_ROLE_KEY" ]; then
+          echo "::warning::DEV_SUPABASE_SERVICE_ROLE_KEY is not configured. Delete-account tests will skip user cleanup."
+        fi
+
+        if [ "$missing" = true ]; then
+          echo "::error::Validation workflow aborted because one or more required secrets are missing."
+          exit 1
+        fi
+
     - name: ⚙️ Setup .NET ${{ env.DOTNET_VERSION }}
       uses: actions/setup-dotnet@v4
       with:
