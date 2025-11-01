@@ -25,6 +25,7 @@ public class AuthUser : Supabase.Postgrest.Models.BaseModel
 /// Verifies delete_my_account RPC function works correctly.
 /// </summary>
 [Collection("SupabaseRateLimited")]
+[Trait("Category", "Integration")]
 public class DeleteAccountIntegrationTests : IAsyncLifetime
 {
     private Supabase.Client _supabaseClient = null!;
@@ -39,17 +40,45 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
             .AddJsonFile("appsettings.test.json")
             .Build();
 
-        var supabaseUrl = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
-        var supabaseKey = config["Supabase:TestKey"] ?? "test-key";
-
-        var options = new Supabase.SupabaseOptions
+        try
         {
-            AutoRefreshToken = true,
-            AutoConnectRealtime = false
-        };
+            var supabaseUrlRaw = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
+            var supabaseKeyRaw = config["Supabase:TestKey"] ?? "test-key";
 
-        _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
+            // Sanitize common copy/paste mistakes (extra quotes/newlines/spaces)
+            var supabaseUrl = supabaseUrlRaw?.Trim().Trim('"', '\'');
+            var supabaseKey = supabaseKeyRaw?.Trim().Trim('"', '\'');
 
+            var options = new Supabase.SupabaseOptions
+            {
+                AutoRefreshToken = true,
+                AutoConnectRealtime = false
+            };
+
+            Console.WriteLine("Initializing Supabase client for tests...");
+            // Safe diagnostics (no secrets):
+            Console.WriteLine($"Supabase URL diagnostics -> length: {supabaseUrl?.Length}, startsWithHttps: {supabaseUrl?.StartsWith("https://")}, hasSpaces: {supabaseUrl?.Contains(' ')}");
+
+            // Validate URL early to surface clear error messages in CI
+            if (string.IsNullOrWhiteSpace(supabaseUrl))
+            {
+                throw new InvalidOperationException("Test environment not configured: Supabase:TestUrl is empty or missing.");
+            }
+
+            if (!Uri.TryCreate(supabaseUrl, UriKind.Absolute, out var parsed) || (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp))
+            {
+                throw new InvalidOperationException("Test environment not configured: Supabase:TestUrl is not a valid absolute URL (expected https://<project>.supabase.co).");
+            }
+
+            _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
+            // Skip initialization if not configured
+            throw;
+        }
         // Initialization complete - each test creates its own users
         await Task.CompletedTask;
     }
@@ -201,6 +230,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             // Skip if test environment not configured
             return;
         }
@@ -276,6 +307,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             return;
         }
     }
@@ -303,7 +336,7 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
 
             // Act & Assert - Try to verify with wrong password
             await _supabaseClient.Auth.SignOut();
-            var wrongPasswordAttempt = async () => 
+            var wrongPasswordAttempt = async () =>
                 await _supabaseClient.Auth.SignIn(userEmail, "WrongPassword123!");
 
             await wrongPasswordAttempt.Should().ThrowAsync<Exception>();
@@ -314,6 +347,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             return;
         }
     }
@@ -351,7 +386,7 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
             {
                 exportResult = await _supabaseClient.Rpc("export_journal_entries", null);
             }
-            catch (Supabase.Postgrest.Exceptions.PostgrestException ex) 
+            catch (Supabase.Postgrest.Exceptions.PostgrestException ex)
                 when (ex.Message.Contains("PGRST202") || ex.Message.Contains("Could not find the function"))
             {
                 // Skip test if export_journal_entries function doesn't exist in test database
@@ -368,6 +403,8 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
         }
         catch (Exception ex) when (ex.Message.Contains("not configured"))
         {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
             return;
         }
     }

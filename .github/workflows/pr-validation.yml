@@ -11,11 +11,46 @@ jobs:
   validate:
     name: Build and Test
     runs-on: ubuntu-latest
+    environment: test
+    env:
+      DEV_SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+      DEV_SUPABASE_ANON_KEY: ${{ secrets.DEV_SUPABASE_ANON_KEY }}
+      DEV_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}
+      TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+      TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
     
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
     
+    - name: 🔐 Validate required secrets
+      run: |
+        missing=false
+
+        check_secret() {
+          local name="$1"
+          local value="$2"
+          if [ -z "$value" ]; then
+            echo "::error::Missing required secret: $name"
+            missing=true
+          fi
+        }
+
+        check_secret "DEV_SUPABASE_URL" "$DEV_SUPABASE_URL"
+        check_secret "DEV_SUPABASE_ANON_KEY" "$DEV_SUPABASE_ANON_KEY"
+        check_secret "TEST_USER_EMAIL" "$TEST_USER_EMAIL"
+        check_secret "TEST_USER_PASSWORD" "$TEST_USER_PASSWORD"
+
+        # Service role key is optional but we warn if absent to protect cleanup steps
+        if [ -z "$DEV_SUPABASE_SERVICE_ROLE_KEY" ]; then
+          echo "::warning::DEV_SUPABASE_SERVICE_ROLE_KEY is not configured. Delete-account tests will skip user cleanup."
+        fi
+
+        if [ "$missing" = true ]; then
+          echo "::error::Validation workflow aborted because one or more required secrets are missing."
+          exit 1
+        fi
+
     - name: ⚙️ Setup .NET ${{ env.DOTNET_VERSION }}
       uses: actions/setup-dotnet@v4
       with:
@@ -27,68 +62,148 @@ jobs:
     - name: 🔨 Build solution
       run: dotnet build --no-restore --configuration Release
     
-    # - name: 🔧 Configure test appsettings
-    #   run: |
-    #     # Update Client.Tests appsettings
-    #     cat > 10xJournal.Client.Tests/appsettings.test.json <<EOF
-    #     {
-    #       "Supabase": {
-    #         "Url": "${{ secrets.DEV_SUPABASE_URL }}",
-    #         "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
-    #         "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
-    #         "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
-    #       },
-    #       "TestUser": {
-    #         "Email": "${{ secrets.TEST_USER_EMAIL }}",
-    #         "Password": "${{ secrets.TEST_USER_PASSWORD }}"
-    #       }
-    #     }
-    #     EOF
+    - name: 🔧 Configure test appsettings
+      run: |
+        # Update Client.Tests appsettings
+        cat > 10xJournal.Client.Tests/appsettings.test.json <<EOF
+        {
+          "Supabase": {
+            "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
+            "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
+            "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
+            "ServiceRoleKey": "${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}"
+          },
+          "TestUser": {
+            "Email": "${{ secrets.TEST_USER_EMAIL }}",
+            "Password": "${{ secrets.TEST_USER_PASSWORD }}"
+          }
+        }
+        EOF
         
-    #     # Update E2E.Tests appsettings
-    #     cat > 10xJournal.E2E.Tests/appsettings.test.json <<EOF
+        # # Update E2E.Tests appsettings
+        # cat > 10xJournal.E2E.Tests/appsettings.test.json <<EOF
+        # {
+        #   "Supabase": {
+        #     "Url": "${{ secrets.DEV_SUPABASE_URL }}",
+        #     "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
+        #     "ServiceRoleKey": "${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}",
+        #     "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
+        #     "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+        #   },
+        #   "TestUser": {
+        #     "Email": "${{ secrets.TEST_USER_EMAIL }}",
+        #     "Password": "${{ secrets.TEST_USER_PASSWORD }}"
+        #   },
+        #   "BaseUrl": "http://localhost:5212"
+        # }
+        # EOF
+        
+        # Debug: Show the generated config structure (without sensitive values)
+        echo "📝 Generated test configuration files:"
+        echo "Client.Tests appsettings.test.json structure:"
+        cat 10xJournal.Client.Tests/appsettings.test.json | grep -E '^\s*"[^"]+":' || echo "Configuration file created"
+        echo ""
+        echo "E2E.Tests appsettings.test.json structure:"
+        cat 10xJournal.E2E.Tests/appsettings.test.json | grep -E '^\s*"[^"]+":' || echo "Configuration file created"
+
+    - name: � Copy updated configs to build output
+      run: |
+        # Copy updated appsettings to the build output directories
+        # This ensures tests run with --no-build use the updated configuration
+        cp 10xJournal.Client.Tests/appsettings.test.json 10xJournal.Client.Tests/bin/Release/net9.0/
+        cp 10xJournal.E2E.Tests/appsettings.test.json 10xJournal.E2E.Tests/bin/Release/net9.0/
+        echo "✅ Updated configuration files copied to build output directories"
+
+    - name: �🔍 Validate Supabase URL format
+      run: |
+        # Extract the TestUrl using jq. The -r flag gives the raw string value.
+        URL=$(jq -r '.Supabase.TestUrl' 10xJournal.Client.Tests/appsettings.test.json)
+
+        # Primary validation: Check if the URL is null, empty, or literally the string "null"
+        if [ -z "$URL" ] || [ "$URL" = "null" ]; then
+          echo "::error::Supabase:TestUrl is missing, empty, or 'null' in 10xJournal.Client.Tests/appsettings.test.json"
+          exit 1
+        fi
+
+        # Debugging: Print diagnostics about the extracted URL
+        LEN=${#URL}
+        STARTS_WITH_HTTPS=false; [[ "$URL" == https://* ]] && STARTS_WITH_HTTPS=true
+        HAS_SPACE=false; [[ "$URL" == *" "* ]] && HAS_SPACE=true
+        
+        echo "Supabase URL diagnostics -> Extracted Value: '$URL', Length: $LEN, Starts with https://: $STARTS_WITH_HTTPS, Contains spaces: $HAS_SPACE"
+
+        # Functional validation: Ensure it's a valid URL format for Supabase
+        if [ "$STARTS_WITH_HTTPS" != true ] || [ "$HAS_SPACE" = true ]; then
+          echo "::error::Invalid Supabase URL format. The URL must start with 'https://' and must not contain spaces."
+          exit 1
+        fi
+        
+        echo "✅ Supabase URL format is valid."
+    
+    - name: 🧪 Run unit tests
+      run: |  
+        dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --filter "Category!=Integration" \
+          --logger "trx;LogFileName=unit-test-results.trx" \
+          --collect:"XPlat Code Coverage"
+    
+    - name: 🔗 Run integration tests
+      run: |
+        dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
+          --no-build \
+          --configuration Release \
+          --filter "Category=Integration" \
+          --logger "trx;LogFileName=integration-test-results.trx" \
+          --logger "console;verbosity=detailed"
+    
+    # - name: 🎭 Setup Playwright
+    #   run: |
+    #     dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj --configuration Release
+    #     pwsh 10xJournal.E2E.Tests/bin/Release/net9.0/playwright.ps1 install --with-deps chromium
+    
+    # - name: � Configure Blazor app for E2E tests
+    #   run: |
+    #     # Update the Blazor app's appsettings.json with test Supabase credentials
+    #     cat > 10xJournal.Client/bin/Release/net9.0/wwwroot/appsettings.json <<EOF
     #     {
     #       "Supabase": {
     #         "Url": "${{ secrets.DEV_SUPABASE_URL }}",
     #         "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
     #       },
-    #       "TestUser": {
-    #         "Email": "${{ secrets.TEST_USER_EMAIL }}",
-    #         "Password": "${{ secrets.TEST_USER_PASSWORD }}"
-    #       },
-    #       "BaseUrl": "http://localhost:5000"
+    #       "DevUser": {
+    #         "Enabled": false,
+    #         "UserId": "",
+    #         "Email": ""
+    #       }
     #     }
     #     EOF
+    #     echo "✅ Blazor app configured for E2E tests"
+    
+    # - name: �🚀 Start Blazor WASM app
+    #   run: |
+    #     # Start the Blazor WASM app in the background
+    #     cd 10xJournal.Client
+    #     dotnet run --no-build --configuration Release --urls "http://localhost:5212" &
         
-    #     # Debug: Show the generated config (redacting only values, not keys)
-    #     echo "📝 Generated test configuration files:"
-    #     echo "Client.Tests appsettings.test.json:"
-    #     cat 10xJournal.Client.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
-    #     echo ""
-    #     echo "E2E.Tests appsettings.test.json:"
-    #     cat 10xJournal.E2E.Tests/appsettings.test.json | sed 's/\(: "\)[^"]*supabase[^"]*"/\1***REDACTED***"/gi' | sed 's/\("Password": "\)[^"]*/\1***REDACTED***/g' | sed 's/\("Email": "\)[^"]*/\1***REDACTED***/g'
-    
-    # - name: 🧪 Run unit tests
-    #   run: |  
-    #     dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
-    #       --no-build \
-    #       --configuration Release \
-    #       --filter "Category!=Integration" \
-    #       --logger "trx;LogFileName=unit-test-results.trx" \
-    #       --collect:"XPlat Code Coverage"
-    
-    # - name: 🔗 Run integration tests
-    #   run: |
-    #     dotnet test 10xJournal.Client.Tests/10xJournal.Client.Tests.csproj \
-    #       --no-build \
-    #       --configuration Release \
-    #       --filter "Category=Integration" \
-    #       --logger "trx;LogFileName=integration-test-results.trx"
-    
-    # - name: 🎭 Setup Playwright
-    #   run: |
-    #     dotnet build 10xJournal.E2E.Tests/10xJournal.E2E.Tests.csproj
-    #     pwsh 10xJournal.E2E.Tests/bin/Debug/net9.0/playwright.ps1 install --with-deps chromium
+    #     # Wait for the app to be ready (max 60 seconds)
+    #     echo "Waiting for Blazor app to start..."
+    #     for i in {1..60}; do
+    #       if curl -s http://localhost:5212 > /dev/null; then
+    #         echo "✅ Blazor app is ready!"
+    #         break
+    #       fi
+    #       echo "Waiting... ($i/60)"
+    #       sleep 1
+    #     done
+        
+    #     # Verify the app is running
+    #     if ! curl -s http://localhost:5212 > /dev/null; then
+    #       echo "❌ Failed to start Blazor app"
+    #       exit 1
+    #     fi
     
     # - name: 🎬 Run E2E tests
     #   run: |
@@ -97,7 +212,13 @@ jobs:
     #       --logger "trx;LogFileName=e2e-test-results.trx" \
     #       --logger "console;verbosity=detailed"
     
-    - name: 📊 Upload test results
+    # - name: � Stop Blazor WASM app
+    #   if: always()
+    #   run: |
+    #     # Kill the background dotnet process running the Blazor app
+    #     pkill -f "dotnet.*10xJournal.Client" || echo "No Blazor app process found"
+    
+    - name: �📊 Upload test results
       if: always()
       uses: actions/upload-artifact@v4
       with:
