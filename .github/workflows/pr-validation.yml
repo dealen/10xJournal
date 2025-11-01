@@ -71,7 +71,8 @@ jobs:
             "Url": "${{ secrets.DEV_SUPABASE_URL }}",
             "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
             "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
-            "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+            "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
+            "ServiceRoleKey": "${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}"
           },
           "TestUser": {
             "Email": "${{ secrets.TEST_USER_EMAIL }}",
@@ -102,6 +103,23 @@ jobs:
         echo ""
         echo "E2E.Tests appsettings.test.json structure:"
         cat 10xJournal.E2E.Tests/appsettings.test.json | grep -E '^\s*"[^"]+":' || echo "Configuration file created"
+
+    - name: 🔍 Validate Supabase URL format (sanitized)
+      run: |
+        # Extract Supabase TestUrl safely and print diagnostics without leaking values
+        URL=$(jq -r '.Supabase.TestUrl' 10xJournal.Client.Tests/appsettings.test.json)
+        if [ "$URL" = "null" ] || [ -z "$URL" ]; then
+          echo "::error::Supabase:TestUrl is missing or empty in 10xJournal.Client.Tests/appsettings.test.json"
+          exit 1
+        fi
+        TRIMMED=$(echo -n "$URL" | sed 's/^\s*//;s/\s*$//;s/^\"//;s/\"$//;s/^\'\''//;s/\'\'$//')
+        LEN=${#TRIMMED}
+        STARTS_WITH_HTTPS=false; [[ "$TRIMMED" == https://* ]] && STARTS_WITH_HTTPS=true
+        HAS_SPACE=false; [[ "$TRIMMED" == *" "* ]] && HAS_SPACE=true
+        echo "Supabase URL diagnostics -> length: $LEN, startsWithHttps: $STARTS_WITH_HTTPS, hasSpaces: $HAS_SPACE"
+        if [ "$STARTS_WITH_HTTPS" != true ]; then
+          echo "::warning::Supabase URL does not start with https://. Expected format: https://<project>.supabase.co"
+        fi
     
     - name: 🧪 Run unit tests
       run: |  
@@ -118,7 +136,8 @@ jobs:
           --no-build \
           --configuration Release \
           --filter "Category=Integration" \
-          --logger "trx;LogFileName=integration-test-results.trx"
+          --logger "trx;LogFileName=integration-test-results.trx" \
+          --logger "console;verbosity=detailed"
     
     - name: 🎭 Setup Playwright
       run: |
