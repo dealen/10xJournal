@@ -27,6 +27,9 @@ builder.Services.AddScoped<_10xJournal.Client.Features.Authentication.Register.R
 builder.Services.AddScoped<LogoutHandler>();
 builder.Services.AddScoped<WelcomeEntryService>();
 
+// Register session persistence handler for Supabase authentication
+builder.Services.AddScoped<_10xJournal.Client.Infrastructure.Authentication.BlazorSessionPersistence>();
+
 builder.Services.AddScoped(provider =>
 {
     var configuration = provider.GetRequiredService<IConfiguration>();
@@ -34,10 +37,14 @@ builder.Services.AddScoped(provider =>
     var supabaseUrl = configuration["Supabase:Url"] ?? throw new InvalidOperationException("Configuration value 'Supabase:Url' is missing.");
     var supabaseKey = configuration["Supabase:AnonKey"] ?? throw new InvalidOperationException("Configuration value 'Supabase:AnonKey' is missing.");
 
+    // Get the session persistence handler to save sessions to localStorage
+    var sessionPersistence = provider.GetRequiredService<_10xJournal.Client.Infrastructure.Authentication.BlazorSessionPersistence>();
+
     var options = new Supabase.SupabaseOptions
     {
         AutoConnectRealtime = false,
-        AutoRefreshToken = true
+        AutoRefreshToken = true,
+        SessionHandler = sessionPersistence // Use our custom Blazor session handler for persistent auth
     };
 
     return new Supabase.Client(supabaseUrl, supabaseKey, options);
