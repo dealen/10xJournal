@@ -39,14 +39,29 @@ public class RegisterIntegrationTests : IAsyncLifetime
             .AddJsonFile("appsettings.test.json")
             .Build();
 
-        var supabaseUrl = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
-        var supabaseKey = config["Supabase:TestKey"] ?? "test-key";
+        var supabaseUrlRaw = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
+        var supabaseKeyRaw = config["Supabase:TestKey"] ?? "test-key";
+
+        // Sanitize common copy/paste mistakes (extra quotes/newlines/spaces)
+        var supabaseUrl = supabaseUrlRaw?.Trim().Trim('"', '\'');
+        var supabaseKey = supabaseKeyRaw?.Trim().Trim('"', '\'');
 
         var options = new Supabase.SupabaseOptions
         {
             AutoRefreshToken = true,
             AutoConnectRealtime = false
         };
+
+        // Validate URL early to surface clear error messages in CI
+        if (string.IsNullOrWhiteSpace(supabaseUrl))
+        {
+            throw new InvalidOperationException("Test environment not configured: Supabase:TestUrl is empty or missing.");
+        }
+
+        if (!Uri.TryCreate(supabaseUrl, UriKind.Absolute, out var parsed) || (parsed.Scheme != Uri.UriSchemeHttps && parsed.Scheme != Uri.UriSchemeHttp))
+        {
+            throw new InvalidOperationException("Test environment not configured: Supabase:TestUrl is not a valid absolute URL (expected https://<project>.supabase.co).");
+        }
 
         _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
         _logger = SupabaseTestHelper.CreateTestLogger<RegisterHandler>();
