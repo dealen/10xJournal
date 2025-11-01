@@ -39,17 +39,26 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
             .AddJsonFile("appsettings.test.json")
             .Build();
 
-        var supabaseUrl = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
-        var supabaseKey = config["Supabase:TestKey"] ?? "test-key";
-
-        var options = new Supabase.SupabaseOptions
+        try
         {
-            AutoRefreshToken = true,
-            AutoConnectRealtime = false
-        };
+            var supabaseUrl = config["Supabase:TestUrl"] ?? "https://test-instance-url.supabase.co";
+            var supabaseKey = config["Supabase:TestKey"] ?? "test-key";
 
-        _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
+            var options = new Supabase.SupabaseOptions
+            {
+                AutoRefreshToken = true,
+                AutoConnectRealtime = false
+            };
 
+            _supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Test environment not configured properly.");
+            Console.WriteLine(ex.Message);
+            // Skip initialization if not configured
+            throw;
+        }
         // Initialization complete - each test creates its own users
         await Task.CompletedTask;
     }
@@ -307,7 +316,7 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
 
             // Act & Assert - Try to verify with wrong password
             await _supabaseClient.Auth.SignOut();
-            var wrongPasswordAttempt = async () => 
+            var wrongPasswordAttempt = async () =>
                 await _supabaseClient.Auth.SignIn(userEmail, "WrongPassword123!");
 
             await wrongPasswordAttempt.Should().ThrowAsync<Exception>();
@@ -357,7 +366,7 @@ public class DeleteAccountIntegrationTests : IAsyncLifetime
             {
                 exportResult = await _supabaseClient.Rpc("export_journal_entries", null);
             }
-            catch (Supabase.Postgrest.Exceptions.PostgrestException ex) 
+            catch (Supabase.Postgrest.Exceptions.PostgrestException ex)
                 when (ex.Message.Contains("PGRST202") || ex.Message.Contains("Could not find the function"))
             {
                 // Skip test if export_journal_entries function doesn't exist in test database
