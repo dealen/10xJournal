@@ -86,13 +86,16 @@ jobs:
         {
           "Supabase": {
             "Url": "${{ secrets.DEV_SUPABASE_URL }}",
-            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
+            "AnonKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}",
+            "ServiceRoleKey": "${{ secrets.DEV_SUPABASE_SERVICE_ROLE_KEY }}",
+            "TestUrl": "${{ secrets.DEV_SUPABASE_URL }}",
+            "TestKey": "${{ secrets.DEV_SUPABASE_ANON_KEY }}"
           },
           "TestUser": {
             "Email": "${{ secrets.TEST_USER_EMAIL }}",
             "Password": "${{ secrets.TEST_USER_PASSWORD }}"
           },
-          "BaseUrl": "http://localhost:5000"
+          "BaseUrl": "http://localhost:5212"
         }
         EOF
         
