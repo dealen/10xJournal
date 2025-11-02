@@ -32,6 +32,8 @@ public sealed class LoginHandler
     {
         try
         {
+            _logger.LogInformation("Starting login process for {Email}", email);
+            
             // Step 1: Sign in with Supabase Auth
             var session = await _supabaseClient.Auth.SignIn(email, password);
 
@@ -42,7 +44,7 @@ public sealed class LoginHandler
             }
 
             var userId = Guid.Parse(session.User.Id);
-            _logger.LogInformation("User {UserId} signed in, ensuring profile and streak records exist", userId);
+            _logger.LogInformation("User {UserId} signed in successfully, ensuring profile and streak records exist", userId);
 
             // Step 2: Ensure user profile and streak records exist
             // This is idempotent and handles cases where user was created outside normal registration flow
@@ -50,13 +52,17 @@ public sealed class LoginHandler
 
             _logger.LogInformation("Login completed successfully for user {UserId}", userId);
         }
-        catch (Supabase.Gotrue.Exceptions.GotrueException)
+        catch (Supabase.Gotrue.Exceptions.GotrueException ex)
         {
+            // Log the EXACT exception message for debugging
+            _logger.LogWarning(ex, "GotrueException during login for {Email}. Exception message: '{Message}'", 
+                email, ex.Message ?? "null");
             throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error occurred during login for {Email}", email);
+            _logger.LogError(ex, "Unexpected error occurred during login for {Email}. Exception type: {ExceptionType}, Message: '{Message}'", 
+                email, ex.GetType().Name, ex.Message ?? "null");
             throw;
         }
     }
@@ -77,7 +83,19 @@ public sealed class LoginHandler
                 { "p_user_id", userId }
             };
 
-            var result = await _supabaseClient.Rpc("initialize_new_user", parameters);
+            // Add timeout to prevent hanging on slow mobile networks (30 seconds)
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            
+            var rpcTask = _supabaseClient.Rpc("initialize_new_user", parameters);
+            var completedTask = await Task.WhenAny(rpcTask, Task.Delay(Timeout.Infinite, cts.Token));
+            
+            if (completedTask != rpcTask)
+            {
+                _logger.LogError("initialize_new_user RPC timed out for user {UserId} after 30 seconds", userId);
+                throw new OperationCanceledException("RPC call timed out");
+            }
+            
+            var result = await rpcTask;
 
             if (result?.Content == null)
             {
@@ -105,9 +123,15 @@ public sealed class LoginHandler
 
             _logger.LogInformation("Profile and streak records ensured for user {UserId}: {Message}", userId, response.Message);
         }
+        catch (OperationCanceledException)
+        {
+            _logger.LogError("initialize_new_user RPC timed out for user {UserId} after 30 seconds", userId);
+            throw new InvalidOperationException("Login is taking longer than expected. Please check your connection and try again.");
+        }
         catch (Exception ex) when (ex is not InvalidOperationException)
         {
-            _logger.LogError(ex, "Unexpected error initializing user records for {UserId}", userId);
+            _logger.LogError(ex, "Unexpected error initializing user records for {UserId}. Exception type: {ExceptionType}", 
+                userId, ex.GetType().Name);
             throw new InvalidOperationException($"Failed to initialize user profile and streak: {ex.Message}", ex);
         }
     }

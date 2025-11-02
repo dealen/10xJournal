@@ -3,14 +3,36 @@
 
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>10xJournal.Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>10xJournal</title>
     <base href="/" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json" />
+    
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+    
+    <!-- iOS Specific Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="10xJournal" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
     <link rel="stylesheet" href="css/app.css" />
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" type="image/png" href="favicon.png" />
     <link href="10xJournal.Client.styles.css" rel="stylesheet" />
+    
+    <!-- PWA Description -->
+    <meta name="description" content="A minimalist, distraction-free digital journal for tracking your daily thoughts and progress." />
 </head>
 
 <body>
@@ -27,6 +49,8 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
+    
+    <!-- Scripts -->
     <script src="js/theme.js"></script>
     <script src="js/export.js"></script>
     <script>
@@ -36,6 +60,47 @@
             return window.location.hash;
         };
     </script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        // Register service worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function(registration) {
+                        console.log('[PWA] Service Worker registered successfully:', registration.scope);
+                        
+                        // Check for updates periodically
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            console.log('[PWA] New service worker found, installing...');
+                            
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('[PWA] New content available, please refresh.');
+                                    // Optionally show a notification to the user
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.error('[PWA] Service Worker registration failed:', error);
+                    });
+                
+                // Handle service worker updates
+                let refreshing = false;
+                navigator.serviceWorker.addEventListener('controllerchange', function() {
+                    if (refreshing) return;
+                    refreshing = true;
+                    console.log('[PWA] Service Worker updated, reloading page...');
+                    window.location.reload();
+                });
+            });
+        } else {
+            console.warn('[PWA] Service Workers are not supported in this browser.');
+        }
+    </script>
+    
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

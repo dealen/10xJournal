@@ -63,12 +63,16 @@
         }
         catch (Supabase.Gotrue.Exceptions.GotrueException ex)
         {
-            Logger.LogWarning(ex, "Failed login attempt for {Email}", loginModel.Email);
+            // Log the EXACT exception message for debugging mobile issues
+            Logger.LogWarning(ex, "GotrueException during login for {Email}. Message: '{Message}', StatusCode: {StatusCode}", 
+                loginModel.Email, ex.Message ?? "null", ex.StatusCode);
             errorMessage = AuthErrorMapper.MapLoginError(ex);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Unexpected error during login");
+            // Log detailed information about non-auth exceptions
+            Logger.LogError(ex, "Unexpected error during login. Type: {ExceptionType}, Message: '{Message}'", 
+                ex.GetType().Name, ex.Message ?? "null");
             errorMessage = "Wystąpił błąd połączenia. Spróbuj ponownie później.";
         }
         finally
