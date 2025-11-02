@@ -1,6 +1,6 @@
 // Production-grade service worker for 10xJournal PWA
 // Uses stale-while-revalidate strategy for optimal performance
-const CACHE_VERSION = '1.0.0';
+const CACHE_VERSION = '1.0.1';
 const CACHE_NAME = `10xjournal-v${CACHE_VERSION}`;
 const RUNTIME_CACHE = `10xjournal-runtime-v${CACHE_VERSION}`;
 
@@ -82,6 +82,11 @@ function shouldCache(request) {
   }
   
   const url = new URL(request.url);
+  
+  // Only cache HTTP and HTTPS requests (exclude chrome-extension://, about:, data:, etc.)
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    return false;
+  }
   
   // Don't cache blacklisted URLs
   for (const pattern of CACHE_BLACKLIST) {
