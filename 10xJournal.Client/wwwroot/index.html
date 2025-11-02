@@ -67,6 +67,9 @@
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function() {
+                // Track if we already had a controller when the page loaded
+                const hadController = !!navigator.serviceWorker.controller;
+                
                 navigator.serviceWorker.register('/service-worker.js')
                     .then(function(registration) {
                         console.log('[PWA] Service Worker registered successfully:', registration.scope);
@@ -89,9 +92,18 @@
                     });
                 
                 // Handle service worker updates
+                // Only reload if we had a controller before (i.e., this is an update, not first install)
                 let refreshing = false;
                 navigator.serviceWorker.addEventListener('controllerchange', function() {
                     if (refreshing) return;
+                    
+                    // Only reload if we had a service worker before
+                    // This prevents reload on first install when SW takes control
+                    if (!hadController) {
+                        console.log('[PWA] Service Worker took control for the first time, no reload needed.');
+                        return;
+                    }
+                    
                     refreshing = true;
                     console.log('[PWA] Service Worker updated, reloading page...');
                     window.location.reload();
