@@ -16,13 +16,19 @@ const PRECACHE_URLS = [
 ];
 
 // Assets that should NOT be cached (API calls, authentication, configuration)
-const CACHE_BLACKLIST = [
-  /supabase\.co/,
-  /auth\//,
-  /realtime\//,
-  /storage\//,
-  /appsettings.*\.json$/  // CRITICAL: Never cache configuration files - they change between environments
-];
+const CACHE_BLACKLIST = {
+  // Domain-based patterns (tested against full URL)
+  domains: [
+    /supabase\.co/
+  ],
+  // Path-based patterns (tested against pathname only)
+  paths: [
+    /auth\//,
+    /realtime\//,
+    /storage\//,
+    /appsettings.*\.json$/  // CRITICAL: Never cache configuration files - they change between environments
+  ]
+};
 
 /**
  * Installation event - pre-cache critical assets
@@ -89,9 +95,16 @@ function shouldCache(request) {
     return false;
   }
   
-  // Don't cache blacklisted URLs
-  for (const pattern of CACHE_BLACKLIST) {
+  // Don't cache blacklisted URLs - check domain patterns against full URL
+  for (const pattern of CACHE_BLACKLIST.domains) {
     if (pattern.test(url.href)) {
+      return false;
+    }
+  }
+  
+  // Don't cache blacklisted URLs - check path patterns against pathname only
+  for (const pattern of CACHE_BLACKLIST.paths) {
+    if (pattern.test(url.pathname)) {
       return false;
     }
   }
