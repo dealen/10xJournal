@@ -34,7 +34,7 @@ jobs:
     - name: 🧹 Clean previous build
       run: dotnet clean 10xJournal.Client/10xJournal.Client.csproj -c Release
 
-    - name:  Update appsettings for production (BEFORE BUILD)
+    - name: 🔧 Update appsettings for production (BEFORE BUILD)
       run: |
         cat > 10xJournal.Client/wwwroot/appsettings.json <<EOF
         {
