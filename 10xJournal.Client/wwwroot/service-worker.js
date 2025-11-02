@@ -1,6 +1,6 @@
 // Production-grade service worker for 10xJournal PWA
 // Uses stale-while-revalidate strategy for optimal performance
-const CACHE_VERSION = '1.0.1';
+const CACHE_VERSION = '1.0.2';
 const CACHE_NAME = `10xjournal-v${CACHE_VERSION}`;
 const RUNTIME_CACHE = `10xjournal-runtime-v${CACHE_VERSION}`;
 
@@ -15,12 +15,13 @@ const PRECACHE_URLS = [
   '/css/app.css'
 ];
 
-// Assets that should NOT be cached (API calls, authentication)
+// Assets that should NOT be cached (API calls, authentication, configuration)
 const CACHE_BLACKLIST = [
   /supabase\.co/,
   /auth\//,
   /realtime\//,
-  /storage\//
+  /storage\//,
+  /appsettings.*\.json$/  // CRITICAL: Never cache configuration files - they change between environments
 ];
 
 /**

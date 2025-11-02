@@ -12,6 +12,12 @@
   },
   "routes": [
     {
+      "route": "/appsettings*.json",
+      "headers": {
+        "cache-control": "no-cache, no-store, must-revalidate, max-age=0"
+      }
+    },
+    {
       "route": "/login",
       "rewrite": "/index.html"
     },
