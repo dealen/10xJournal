@@ -39,8 +39,35 @@ public class AuthErrorMapperTests
     }
 
     [Theory]
+    [InlineData("Rate limit exceeded")]
+    [InlineData("Too many attempts")]
+    [InlineData("rate limit")]
+    public void MapLoginError_WithRateLimit_ReturnsPolishMessage(string errorMessage)
+    {
+        var exception = new GotrueException(errorMessage);
+
+        var result = AuthErrorMapper.MapLoginError(exception);
+
+        result.Should().Be("Zbyt wiele prób logowania. Spróbuj ponownie za kilka minut.");
+    }
+
+    [Theory]
     [InlineData("Network error")]
+    [InlineData("Connection timeout")]
+    [InlineData("network failure")]
+    public void MapLoginError_WithNetworkError_ReturnsNetworkPolishMessage(string errorMessage)
+    {
+        var exception = new GotrueException(errorMessage);
+
+        var result = AuthErrorMapper.MapLoginError(exception);
+
+        result.Should().Be("Problem z połączeniem. Sprawdź internet i spróbuj ponownie.");
+    }
+
+    [Theory]
+    [InlineData("Unknown database error")]
     [InlineData("")]
+    [InlineData("Some random error")]
     public void MapLoginError_WithUnknownError_ReturnsGenericPolishMessage(string errorMessage)
     {
         var exception = new GotrueException(errorMessage);
