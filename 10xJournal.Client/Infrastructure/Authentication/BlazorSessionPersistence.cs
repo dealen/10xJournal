@@ -22,8 +22,10 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
 
     /// <summary>
     /// Saves the session to browser localStorage.
-    /// Note: This is a synchronous interface method, but we use fire-and-forget async call.
+    /// Note: This is a synchronous interface method, but we immediately start the async save.
     /// The session is also cached in memory for immediate retrieval.
+    /// We use ConfigureAwait(false).GetAwaiter().GetResult() to ensure the save completes
+    /// even on mobile browsers before proceeding.
     /// </summary>
     public void SaveSession(Session session)
     {
@@ -34,23 +36,26 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
             
             var json = JsonSerializer.Serialize(session);
             
-            // Fire-and-forget async call to save to localStorage
-            // We can't await here due to the interface contract
-            Task.Run(async () =>
+            // CRITICAL: Use synchronous wait to ensure localStorage save completes
+            // This is especially important on mobile browsers where fire-and-forget
+            // operations may not complete if the page navigates away quickly
+            try
             {
-                try
-                {
-                    await _jsRuntime.InvokeVoidAsync("localStorage.setItem", SESSION_KEY, json);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to save session to localStorage: {ex.Message}");
-                }
-            });
+                _jsRuntime.InvokeVoidAsync("localStorage.setItem", SESSION_KEY, json)
+                    .AsTask()
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+            }
+            catch (Exception ex)
+            {
+                // Log but don't throw - we have the session cached in memory
+                Console.Error.WriteLine($"[BlazorSessionPersistence] Failed to save session to localStorage: {ex.Message}");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to save session: {ex.Message}");
+            Console.Error.WriteLine($"[BlazorSessionPersistence] Failed to save session: {ex.Message}");
         }
     }
 
@@ -96,6 +101,7 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
 
     /// <summary>
     /// Destroys the session by removing it from browser localStorage and memory cache.
+    /// Uses synchronous wait to ensure cleanup completes on mobile browsers.
     /// </summary>
     public void DestroySession()
     {
@@ -104,22 +110,23 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
             // Clear the memory cache
             _cachedSession = null;
             
-            // Fire-and-forget async call to remove from localStorage
-            Task.Run(async () =>
+            // Ensure localStorage removal completes (important for mobile)
+            try
             {
-                try
-                {
-                    await _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SESSION_KEY);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to destroy session in localStorage: {ex.Message}");
-                }
-            });
+                _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SESSION_KEY)
+                    .AsTask()
+                    .ConfigureAwait(false)
+                    .GetAwaiter()
+                    .GetResult();
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[BlazorSessionPersistence] Failed to destroy session in localStorage: {ex.Message}");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Failed to destroy session: {ex.Message}");
+            Console.Error.WriteLine($"[BlazorSessionPersistence] Failed to destroy session: {ex.Message}");
         }
     }
 }
