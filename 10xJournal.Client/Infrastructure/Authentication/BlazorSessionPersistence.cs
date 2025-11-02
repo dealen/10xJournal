@@ -22,10 +22,10 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
 
     /// <summary>
     /// Saves the session to browser localStorage.
-    /// Note: This is a synchronous interface method, but we immediately start the async save.
-    /// The session is also cached in memory for immediate retrieval.
-    /// We use ConfigureAwait(false).GetAwaiter().GetResult() to ensure the save completes
-    /// even on mobile browsers before proceeding.
+    /// Note: This is a synchronous interface method, but we fire-and-forget the async save.
+    /// The session is cached in memory for immediate retrieval, and the async save to localStorage
+    /// happens in the background. This is the correct pattern for Blazor WASM as it doesn't support
+    /// synchronous waiting on async JavaScript interop.
     /// </summary>
     public void SaveSession(Session session)
     {
@@ -36,22 +36,10 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
             
             var json = JsonSerializer.Serialize(session);
             
-            // CRITICAL: Use synchronous wait to ensure localStorage save completes
-            // This is especially important on mobile browsers where fire-and-forget
-            // operations may not complete if the page navigates away quickly
-            try
-            {
-                _jsRuntime.InvokeVoidAsync("localStorage.setItem", SESSION_KEY, json)
-                    .AsTask()
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-            catch (Exception ex)
-            {
-                // Log but don't throw - we have the session cached in memory
-                Console.Error.WriteLine($"[BlazorSessionPersistence] Failed to save session to localStorage: {ex.Message}");
-            }
+            // Fire-and-forget save to localStorage
+            // This is the correct pattern for Blazor WASM - we cannot use .Wait() or .GetAwaiter().GetResult()
+            // The in-memory cache ensures immediate availability, and localStorage persistence happens async
+            _ = _jsRuntime.InvokeVoidAsync("localStorage.setItem", SESSION_KEY, json);
         }
         catch (Exception ex)
         {
@@ -101,28 +89,18 @@ public class BlazorSessionPersistence : IGotrueSessionPersistence<Session>
 
     /// <summary>
     /// Destroys the session by removing it from browser localStorage and memory cache.
-    /// Uses synchronous wait to ensure cleanup completes on mobile browsers.
+    /// Uses fire-and-forget pattern for localStorage removal (correct for Blazor WASM).
     /// </summary>
     public void DestroySession()
     {
         try
         {
-            // Clear the memory cache
+            // Clear the memory cache immediately
             _cachedSession = null;
             
-            // Ensure localStorage removal completes (important for mobile)
-            try
-            {
-                _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SESSION_KEY)
-                    .AsTask()
-                    .ConfigureAwait(false)
-                    .GetAwaiter()
-                    .GetResult();
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[BlazorSessionPersistence] Failed to destroy session in localStorage: {ex.Message}");
-            }
+            // Fire-and-forget removal from localStorage
+            // This is the correct pattern for Blazor WASM
+            _ = _jsRuntime.InvokeVoidAsync("localStorage.removeItem", SESSION_KEY);
         }
         catch (Exception ex)
         {
