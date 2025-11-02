@@ -34,15 +34,9 @@ jobs:
     - name: 🧹 Clean previous build
       run: dotnet clean 10xJournal.Client/10xJournal.Client.csproj -c Release
 
-    - name: 🔨 Build and publish
+    - name: 🔧 Update appsettings for production (BEFORE BUILD)
       run: |
-        dotnet publish 10xJournal.Client/10xJournal.Client.csproj \
-          -c Release \
-          -o ./publish
-    
-    - name: 🔧 Update appsettings for production
-      run: |
-        cat > ./publish/wwwroot/appsettings.json <<EOF
+        cat > 10xJournal.Client/wwwroot/appsettings.json <<EOF
         {
           "Supabase": {
             "Url": "${{ secrets.PROD_SUPABASE_URL }}",
@@ -55,6 +49,12 @@ jobs:
           }
         }
         EOF
+
+    - name: 🔨 Build and publish
+      run: |
+        dotnet publish 10xJournal.Client/10xJournal.Client.csproj \
+          -c Release \
+          -o ./publish
     
     - name: 🚀 Deploy to Azure Static Web Apps
       id: deploy
