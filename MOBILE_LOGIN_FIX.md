@@ -95,7 +95,7 @@ Added configurable timeout for the `initialize_new_user` RPC call to prevent mob
 
 ```csharp
 // Add timeout protection for slow mobile networks
-using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
 try
 {
     await _supabaseClient.Rpc("initialize_new_user", cancellationToken: cts.Token);
